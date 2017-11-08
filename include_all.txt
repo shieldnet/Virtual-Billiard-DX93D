@@ -1,6 +1,11 @@
+#include "d3dUtility.h"
+#include <vector>
+#include <ctime>
+#include <cstdlib>
+#include <cstdio>
+#include <cassert>
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <cstdio>
 
 using namespace std;
