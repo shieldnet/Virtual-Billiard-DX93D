@@ -2,35 +2,39 @@
 //
 // File: virtualLego.cpp
 //
-// Original Author: ë°•ì°½í˜„ Chang-hyeon Park, 
+// Original Author: ¹ÚÃ¢Çö Chang-hyeon Park, 
 // Modified by Bong-Soo Sohn and Dong-Jun Kim
 // 
 // Originally programmed for Virtual LEGO. 
 // Modified later to program for Virtual Billiard.
 //        
 ////////////////////////////////////////////////////////////////////////////////
-
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
 #include "d3dUtility.h"
 #include <vector>
 #include <ctime>
 #include <cstdlib>
 #include <cstdio>
-#include <cassert>
 #include <iostream>
-#include <vector>
-#include <algorithm>
+#include <cassert>
 
 using namespace std;
+
+//Playmode
+#define NORMAL_MODE 0
+#define BACK_MODE 1
+#define AHEAD_MODE 2
 
 IDirect3DDevice9* Device = NULL;
 
 // window size
 const int Width  = 1024;
 const int Height = 768;
+int play_mode;
 
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
-const float spherePos[4][2] = { {-1.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
+const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
 // initialize the color of each ball (ball0 ~ ball3)
 const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE};
 
@@ -44,8 +48,7 @@ D3DXMATRIX g_mProj;
 #define M_RADIUS 0.21   // ball radius
 #define PI 3.14159265
 #define M_HEIGHT 0.01
-#define DECREASE_RATE 0.9982
-
+#define DECREASE_RATE 0.997
 // -----------------------------------------------------------------------------
 // CSphere class definition
 // -----------------------------------------------------------------------------
@@ -57,7 +60,9 @@ private :
     float                   m_radius;
 	float					m_velocity_x;
 	float					m_velocity_z;
-
+	float					pre_center_x, pre_center_z; 
+	D3DXMATRIX				matBallRoll;
+	// ÀÌÀü À§Ä¡ º¸°ü, Ãæµ¹ ½Ã¿¡ »ç¿ëÇØ¾ß ÇÔ
 public:
     CSphere(void)
     {
@@ -71,6 +76,35 @@ public:
     ~CSphere(void) {}
 
 public:
+	void setPosition(float x, float y, float z)
+	{
+		D3DXMATRIX m;
+
+		this->center_x = x;
+		this->center_y = y;
+		this->center_z = z;
+
+		D3DXMatrixTranslation(&m, x, y, z);
+		this->setLocalTransform(m);
+	}
+
+	D3DXVECTOR3 getPosition() const
+	{
+		D3DXVECTOR3 org(center_x, center_y, center_z);
+		return org;
+	}
+
+	void adjustPosition(CSphere& ball){
+		D3DXVECTOR3 ball_cord = ball.getCenter();
+		//º¸°£¹ýÀ¸·Î ±Ù»çÇÏ¿© Ãæµ¹ ½ÃÁ¡ÀÇ ÁÂÇ¥·Î ÀÌµ¿ÇÔ.
+		this->setPosition((center_x + this->pre_center_x) / 2, center_y, (center_z + this->pre_center_z) / 2);
+		ball.setPosition((ball_cord.x + ball.pre_center_x) / 2, ball_cord.y, (ball_cord.z + ball.pre_center_z) / 2);
+		if (this->hasIntersected(ball))
+		{
+			this->setPosition(this->pre_center_x, center_y, this->pre_center_z);
+			ball.setPosition(ball.pre_center_x, ball_cord.y, ball.pre_center_z);
+		}
+	}
     bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE)
     {
         if (NULL == pDevice)
@@ -105,49 +139,90 @@ public:
 		m_pSphereMesh->DrawSubset(0);
     }
 	
-    bool hasIntersected(CSphere& ball) 
+	bool hasIntersected(CSphere& ball) const noexcept
 	{
-		// Insert your code here.
+		D3DXVECTOR3 cord = this->getPosition();
+		D3DXVECTOR3 ball_cord = ball.getPosition();
+		double xDistance = abs((cord.x - ball_cord.x) * (cord.x - ball_cord.x));
+		double zDistance = abs((cord.z - ball_cord.z) * (cord.z - ball_cord.z));
+		double totalDistance = sqrt(xDistance + zDistance);
+
+		if (totalDistance < (this->getRadius() + ball.getRadius()))
+		{
+			return true;
+		}
 
 		return false;
 	}
 	
-	void hitBy(CSphere& ball) 
-	{ 
-		// Insert your code here.
+	void hitBy(CSphere& ball) noexcept
+	{
+		if (this->hasIntersected(ball))
+		{
+
+			adjustPosition(ball);
+			D3DXVECTOR3 ball_cord = ball.getPosition();
+			//µÎ °ø »çÀÌÀÇ ¹æÇâ º¤ÅÍ
+			double d_x = center_x - ball_cord.x;
+			double d_z = center_z - ball_cord.z;
+			double size_d = sqrt((d_x * d_x) + (d_z * d_z));
+
+			double vax = this->m_velocity_x;
+			double vaz = this->m_velocity_z;
+			double vbx = ball.m_velocity_x;
+			double vbz = ball.m_velocity_z;
+
+			double size_this_v = sqrt((vax * vax) + (vaz * vaz));
+
+			double cos_t = d_x / size_d;
+			double sin_t = d_z / size_d;
+
+			double vaxp = vbx * cos_t + vbz * sin_t;
+			double vbxp = vax * cos_t + vaz * sin_t;
+			double vazp = vaz * cos_t - vax * sin_t;
+			double vbzp = vbz * cos_t - vbx * sin_t;
+
+			this->setPower(vaxp * cos_t - vazp * sin_t, vaxp * sin_t + vazp * cos_t);
+			ball.setPower(vbxp * cos_t - vbzp * sin_t, vbxp * sin_t + vbzp * cos_t);
+		}
 	}
 
 	void ballUpdate(float timeDiff) 
 	{
-		const float TIME_SCALE = 3.3;
-		D3DXVECTOR3 cord = this->getCenter();
+		const float TIME_SCALE = 3.3F;
+		D3DXVECTOR3 cord = this->getPosition();
 		double vx = abs(this->getVelocity_X());
 		double vz = abs(this->getVelocity_Z());
 
-		if(vx > 0.01 || vz > 0.01)
-		{
-			float tX = cord.x + TIME_SCALE*timeDiff*m_velocity_x;
-			float tZ = cord.z + TIME_SCALE*timeDiff*m_velocity_z;
+		this->pre_center_x = cord.x;
+		this->pre_center_z = cord.z;
 
-			//correction of position of ball
-			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-			/*if(tX >= (4.5 - M_RADIUS))
-				tX = 4.5 - M_RADIUS;
-			else if(tX <=(-4.5 + M_RADIUS))
-				tX = -4.5 + M_RADIUS;
-			else if(tZ <= (-3 + M_RADIUS))
-				tZ = -3 + M_RADIUS;
-			else if(tZ >= (3 - M_RADIUS))
-				tZ = 3 - M_RADIUS;*/
-			
-			this->setCenter(tX, cord.y, tZ);
+		if (vx > 0.01 || vz > 0.01)
+		{
+			const float SPIN_RATIO = 0.01;
+
+			float tX = cord.x + TIME_SCALE * timeDiff * m_velocity_x;
+			float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
+
+			this->setPosition(tX, cord.y, tZ);
+
+			D3DXMATRIX tmp;
+			D3DXVECTOR3 c(this->m_velocity_z, 0, -this->m_velocity_x);
+
+			float force = sqrt(pow(this->m_velocity_x, 2) + pow(this->m_velocity_z, 2));
+			D3DXMatrixRotationAxis(&tmp, &c, force * SPIN_RATIO);
+			matBallRoll *= tmp;
 		}
-		else { this->setPower(0,0);}
+		else
+		{
+			this->setPower(0, 0);
+		}
+
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
-		if(rate < 0 )
-			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
+		if (rate < 0) rate = 0;
+
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);// °øÀÌ ¿òÁ÷ÀÏ ¶§¸¶´Ù, ¼Óµµ¸¦ ³·Ãã
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -176,11 +251,34 @@ public:
         return org;
     }
 	
+	void setDX(float dx)				//x, yÀÇ º¯È­·®¿¡ ´ëÇÑ getter & setter ÇÔ¼ö
+	{
+		m_dx = dx;
+	}
+
+	void setDZ(float dz)
+	{
+		m_dz = dz;
+	}
+
+	float getDX()
+	{
+		return m_dx;
+	}
+
+	float getDZ()
+	{
+		return m_dz;
+	}
+
+
 private:
     D3DXMATRIX              m_mLocal;
     D3DMATERIAL9            m_mtrl;
     ID3DXMesh*              m_pSphereMesh;
-	
+	float                   m_unit;
+	float					m_dx;
+	float					m_dz;
 };
 
 
@@ -228,6 +326,7 @@ public:
             return false;
         return true;
     }
+
     void destroy(void)
     {
         if (m_pBoundMesh != NULL) {
@@ -247,13 +346,37 @@ public:
 	
 	bool hasIntersected(CSphere& ball) 
 	{
-		// Insert your code here.
-		return false;
+		D3DXVECTOR3 temp_coor = ball.getCenter();				//°øÀÇ À§Ä¡
+		if (temp_coor.x >= 4.5-M_RADIUS || temp_coor.z >= 3 - M_RADIUS ||
+			temp_coor.x <= -(4.5 - M_RADIUS) || temp_coor.z <= -(3 - M_RADIUS)) {
+			return true;
+		}
+		else return false;
 	}
 
 	void hitBy(CSphere& ball) 
 	{
-		// Insert your code here.
+		if (hasIntersected(ball)) {//°øÀÌ º®º¸´Ù ¹Û¿¡ ÀÖÀ» °æ¿ì
+			float retheta;
+			D3DXVECTOR3 temp_coor = ball.getCenter();
+			if (temp_coor.x > 4.4-M_RADIUS) {						//¿À¸¥ÂÊ º®
+				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
+				ball.setCenter(4.4 - M_RADIUS, temp_coor.y, temp_coor.z);
+
+			}
+			if (temp_coor.x < -(4.4 - M_RADIUS)) {						//¿ÞÂÊ º®
+				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
+				ball.setCenter(-(4.4 - M_RADIUS), temp_coor.y, temp_coor.z);
+			}
+			if (temp_coor.z > 2.9-M_RADIUS) {					//À§ÂÊ º®
+				ball.setPower(ball.getVelocity_X(), -ball.getVelocity_Z());
+				ball.setCenter(temp_coor.x, temp_coor.y, 2.9-M_RADIUS);
+			}
+			if (temp_coor.z < -(2.9 - M_RADIUS)) {					//¾Æ·¡ÂÊ º®
+				ball.setPower(ball.getVelocity_X(), -ball.getVelocity_Z());
+				ball.setCenter(temp_coor.x, temp_coor.y, -(2.9 - M_RADIUS));
+			}
+		}
 	}    
 	
 	void setPosition(float x, float y, float z)
@@ -374,7 +497,7 @@ CSphere	g_sphere[4];
 CSphere	g_target_blueball;
 CLight	g_light;
 
-double g_camera_pos[3] = {0.0, 5.0, -8.0};
+double g_camera_pos[3] = {0.0, 7.0, -8.0};
 
 // -----------------------------------------------------------------------------
 // Functions
@@ -472,8 +595,6 @@ bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
-
-
 	if( Device )
 	{
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
@@ -541,10 +662,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 				D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
 				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
-					pow(targetpos.z - whitepos.z, 2)));		// ê¸°ë³¸ 1 ì‚¬ë¶„ë©´
-				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 ì‚¬ë¶„ë©´
-				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 ì‚¬ë¶„ë©´
-				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0){ theta = PI + theta; } // 3 ì‚¬ë¶„ë©´
+					pow(targetpos.z - whitepos.z, 2)));		// ±âº» 1 »çºÐ¸é
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 »çºÐ¸é
+				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 »çºÐ¸é
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0){ theta = PI + theta; } // 3 »çºÐ¸é
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
 				g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
 
