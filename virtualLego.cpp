@@ -24,6 +24,8 @@ using namespace std;
 #define NORMAL_MODE 0
 #define BACK_MODE 1
 #define AHEAD_MODE 2
+#define BALL_COUNT 16
+#define HOLE_COUNT 6
 
 IDirect3DDevice9* Device = NULL;
 
@@ -31,12 +33,24 @@ IDirect3DDevice9* Device = NULL;
 const int Width  = 1024;
 const int Height = 768;
 int play_mode;
+int playermode = 0;
+int player1 = 0;
+int player2 = 7;
+//bool player[16] = { false, };
+bool eigthball = false;
+bool tempState = true;
 
-// There are four balls
-// initialize the position (coordinate) of each ball (ball0 ~ ball3)
-const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
-// initialize the color of each ball (ball0 ~ ball3)
-const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE};
+
+
+
+// There are BALL_COUNT balls
+// initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
+const float spherePos[BALL_COUNT][2] = { { -1.5f,-1.0f },{ -2.5f,-1.0f },{ -3.5f,-1.0f },{ -4.5f,-1.0f },{ 1.5f,-1.0f },{ 2.5f,-1.0f },{ 3.5f,-1.0f },{ -1.5f,1.0f },{ -2.5f,1.0f },{ -3.5f,1.0f },{ -4.5f,1.0f },{ 1.5f,1.0f },{ 2.5f,1.0f },{ 3.5f,1.0f },{-4.0f,0.0f },{ -3.5f,0.0f } };
+
+const float holePos[HOLE_COUNT][2] = { { 4.2f,2.7f } ,{ 0.2f,2.7f } ,{ -4.2f,2.7f } ,{ 4.2f,- 2.7f } ,{ 0.2f,-2.7f } ,{ -4.2f,-2.7f } };
+// initialize the color of each ball (ball[0] ~ ball[BALL_COUNT])
+const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::BLACK,d3d::WHITE };
+const D3DXCOLOR holeColor[HOLE_COUNT] = { d3d::BLACK,d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK };
 
 // -----------------------------------------------------------------------------
 // Transform matrices
@@ -62,8 +76,12 @@ private :
 	float					m_velocity_z;
 	float					pre_center_x, pre_center_z; 
 	D3DXMATRIX				matBallRoll;
+	
 	// 이전 위치 보관, 충돌 시에 사용해야 함
 public:
+	bool					isHole;
+	int						ballNum;
+
     CSphere(void)
     {
         D3DXMatrixIdentity(&m_mLocal);
@@ -116,6 +134,7 @@ public:
         m_mtrl.Emissive = d3d::BLACK;
         m_mtrl.Power    = 5.0f;
 		
+		
         if (FAILED(D3DXCreateSphere(pDevice, getRadius(), 50, 50, &m_pSphereMesh, NULL)))
             return false;
         return true;
@@ -154,12 +173,44 @@ public:
 
 		return false;
 	}
+	bool isinOrder(int ballN, int player) {
+		if (player == 0) {
+			if (player1 != 6&& ballN==14) {
+				return false;
+			}
+			if (player1 == 6 && ballN == 14) {
+				return true;
+			}
+			if (player1 == ballN ) { 
+				player1++;
+				return true;
+			}
+
+		}
+		else if (player == 1) {
+			if (player2 != 13 && ballN == 14) {
+				return false;
+			}
+			if (player2 == 13 && ballN == 14) {
+				return true;
+			}
+
+			if (player2 == ballN+7) {
+				player2++;
+				return true;
+			}
+		
+		}
+		return false;
+	
+	}
 	
 	void hitBy(CSphere& ball) noexcept
 	{
 		if (this->hasIntersected(ball))
 		{
-
+			if (!ball.isHole) {
+			
 			adjustPosition(ball);
 			D3DXVECTOR3 ball_cord = ball.getPosition();
 			//두 공 사이의 방향 벡터
@@ -184,8 +235,20 @@ public:
 
 			this->setPower(vaxp * cos_t - vazp * sin_t, vaxp * sin_t + vazp * cos_t);
 			ball.setPower(vbxp * cos_t - vbzp * sin_t, vbxp * sin_t + vbzp * cos_t);
+			tempState = isinOrder(ball.ballNum, playermode);
+			
+			}
+			else {
+				//if (this->ballNum == 14) exit(1); //14번공 확인
+
+				tempState = isinOrder(ball.ballNum, playermode);
+				setPosition(99.99f, this->center_y, 99.99f);
+
+
+			}
 		}
 	}
+	
 
 	void ballUpdate(float timeDiff) 
 	{
@@ -282,6 +345,67 @@ private:
 };
 
 
+// -----------------------------------------------------------------------------
+// CHole class definition
+// -----------------------------------------------------------------------------
+class CHole: public CSphere {
+
+private:
+	float					center_x, center_y, center_z;
+	float                   m_radius;
+	float					m_velocity_x;
+	float					m_velocity_z;
+	float					pre_center_x, pre_center_z;
+	D3DXMATRIX				matBallRoll;
+	
+
+private:
+	D3DXMATRIX              m_mLocal;
+	D3DMATERIAL9            m_mtrl;
+	ID3DXMesh*              m_pSphereMesh;
+	float                   m_unit;
+	float					m_dx;
+	float					m_dz;
+
+public:
+
+	//bool					isHole;
+	CHole(void)
+	{
+		D3DXMatrixIdentity(&m_mLocal);
+		ZeroMemory(&m_mtrl, sizeof(m_mtrl));
+		m_radius = 0;
+		m_velocity_x = 0;
+		m_velocity_z = 0;
+		m_pSphereMesh = NULL;
+		isHole = true;
+	}
+	~CHole(void) {}
+
+
+	
+		
+
+};
+// -----------------------------------------------------------------------------
+// CEightball class definition
+// -----------------------------------------------------------------------------
+class CEightball : public CSphere {
+
+private:
+	float					center_x, center_y, center_z;
+	float                   m_radius;
+	float					m_velocity_x;
+	float					m_velocity_z;
+	float					pre_center_x, pre_center_z;
+	D3DXMATRIX				matBallRoll;
+
+
+	
+
+};
+
+
 
 // -----------------------------------------------------------------------------
 // CWall class definition
@@ -334,6 +458,7 @@ public:
             m_pBoundMesh = NULL;
         }
     }
+	
     void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
     {
         if (NULL == pDevice)
@@ -493,7 +618,8 @@ private:
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
 CWall	g_legowall[4];
-CSphere	g_sphere[4];
+CSphere	g_sphere[BALL_COUNT];
+CHole g_hole[HOLE_COUNT];
 CSphere	g_target_blueball;
 CLight	g_light;
 
@@ -532,10 +658,17 @@ bool Setup()
 	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
 	// create four balls and set the position
-	for (i=0;i<4;i++) {
+	for (i=0;i<BALL_COUNT;i++) {
 		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
 		g_sphere[i].setPower(0,0);
+		g_sphere[i].ballNum = i;
+	}
+	//create 6 holess and set the position
+	for (i = 0; i<HOLE_COUNT; i++) {
+		if (false == g_hole[i].create(Device, holeColor[i])) return false;
+		g_hole[i].setCenter(holePos[i][0], (float)M_RADIUS, holePos[i][1]);
+		g_hole[i].setPower(0, 0);
 	}
 	
 	// create blue ball for set direction
@@ -595,30 +728,49 @@ bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
+	int k = 0;
 	if( Device )
 	{
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 		
 		// update the position of each ball. during update, check whether each ball hit by walls.
-		for( i = 0; i < 4; i++) {
+		for( i = 0; i < BALL_COUNT; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
+		
+			for(j = 0; j < BALL_COUNT; j++){ g_legowall[i].hitBy(g_sphere[j]); }
+		}
+		for (i = 0; i < HOLE_COUNT; i++) {
+			g_hole[i].ballUpdate(timeDelta);
+
+			for (j = 0; j < HOLE_COUNT; j++) { g_legowall[i].hitBy(g_hole[j]); }
 		}
 
 		// check whether any two balls hit together and update the direction of balls
-		for(i = 0 ;i < 4; i++){
-			for(j = 0 ; j < 4; j++) {
+		for(i = 0 ;i < BALL_COUNT; i++){
+			for(j = 0 ; j < BALL_COUNT; j++) {
 				if(i >= j) {continue;}
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
+			for (k = 0; k < HOLE_COUNT; k++) {
+				if (i >= j) { continue; }
+				g_sphere[i].hitBy(g_hole[k]);
+				
+			}
 		}
+	
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
 		for (i=0;i<4;i++) 	{
 			g_legowall[i].draw(Device, g_mWorld);
+			
+		}
+		for (i = 0; i < BALL_COUNT; i++) {
 			g_sphere[i].draw(Device, g_mWorld);
+		}
+		for (i = 0; i < HOLE_COUNT; i++) {
+			g_hole[i].draw(Device, g_mWorld);
 		}
 		g_target_blueball.draw(Device, g_mWorld);
         g_light.draw(Device);
@@ -660,14 +812,14 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             case VK_SPACE:
 				
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
-				D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
+				D3DXVECTOR3	whitepos = g_sphere[15].getCenter();
 				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
 					pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0){ theta = PI + theta; } // 3 사분면
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
-				g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
+				g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
 
 				break;
 
