@@ -18,6 +18,8 @@
 #include <iostream>
 #include <cassert>
 
+enum { PLAYER2, PLAYER1 };
+
 using namespace std;
 
 //Playmode
@@ -33,9 +35,10 @@ IDirect3DDevice9* Device = NULL;
 const int Width  = 1024;
 const int Height = 768;
 int play_mode;
-int playermode = 0;
+int playermode = PLAYER1;
 int player1 = 0;
 int player2 = 7;
+int threeOut = 0;
 //bool player[16] = { false, };
 bool eigthball = false;
 bool tempState = true;
@@ -213,6 +216,7 @@ public:
 	
 	void hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 	{
+		
 		if (this->hasIntersected(ball))
 		{
 			if (!ball.isHole) {
@@ -241,14 +245,19 @@ public:
 
 			this->setPower(vaxp * cos_t - vazp * sin_t, vaxp * sin_t + vazp * cos_t);
 			ball.setPower(vbxp * cos_t - vbzp * sin_t, vbxp * sin_t + vbzp * cos_t);
-			tempState = isinOrder(ball.ballNum, playermode);
+			//tempState = isinOrder(ball.ballNum, playermode);
 			
 			}
 			else {
 				//if (this->ballNum == 14) exit(1); //14번공 확인
-
-				
-				tempState = isinOrder(ball.ballNum, playermode);
+				if (threeOut <= 1) {
+					//cout << threeOut << endl;
+					threeOut++;
+				}
+				else {
+					tempState = isinOrder(ball.ballNum, playermode);
+					//threeOut == 0;
+				}
 				if (this->ballNum == 15) {
 					setPosition(0.0f, this->center_y, 0.0f);
 					this->m_velocity_x = 0;
@@ -257,9 +266,12 @@ public:
 				else {
 					setPosition(99.99f, this->center_y, 99.99f);
 				}
-
-
+				if (this->m_velocity_x == 0 && this->m_velocity_z == 0) {
+					playermode++;
+					playermode %= 2;
+				}
 			}
+			
 		}
 	}
 	
@@ -637,9 +649,6 @@ CHole g_hole[HOLE_COUNT];
 CSphere	g_target_blueball;
 CLight	g_light;
 
-enum { PLAYER2, PLAYER1 };
-int turn;	// 차례
-
 double g_camera_pos[3] = {0.0, 7.0, -8.0};
 
 // -----------------------------------------------------------------------------
@@ -743,8 +752,6 @@ bool Setup()
 	desc.OutputPrecision = OUT_DEFAULT_PRECIS;
 	desc.PitchAndFamily = FF_DONTCARE;
 
-	turn = PLAYER1;
-
 	D3DXCreateFontIndirect(Device, &desc, &m_pFont);
 
 	return true;
@@ -778,8 +785,8 @@ bool Display(float timeDelta)
 	
 		SetRect(&rect, 0, 0, 800, 600);
 		ZeroMemory(str, 100);
-																										// update the font by using the 차례
-		if (turn)
+																										// display the font
+		if (playermode)
 		{	
 			sprintf(str, "Player 1");
 			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
@@ -790,6 +797,15 @@ bool Display(float timeDelta)
 			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
 		}
 		
+																										// update the font
+		if (tempState == false)
+		{
+			playermode++;
+			playermode = playermode % 2;
+			threeOut = 0;
+			tempState = true;
+		}
+
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for( i = 0; i < BALL_COUNT; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
@@ -878,10 +894,6 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
 				g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
 
-				// 스페이스가 눌리면 font 바꿈
-				turn++;
-				turn = turn % 2;
-				
 				break;
 
 			}
