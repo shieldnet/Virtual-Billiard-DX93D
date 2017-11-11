@@ -498,7 +498,7 @@ CSphere	g_target_blueball;	// 파란색 공
 CLight	g_light;
 
 enum { PLAYER2, PLAYER1 };
-int turn = PLAYER2;	// 차례
+int turn;	// 차례
 
 double g_camera_pos[3] = {0.0, 7.0, -8.0};
 
@@ -594,6 +594,8 @@ bool Setup()
 	desc.Italic = 0;
 	desc.OutputPrecision = OUT_DEFAULT_PRECIS;
 	desc.PitchAndFamily = FF_DONTCARE;
+
+	turn = PLAYER1;
 
 	D3DXCreateFontIndirect(Device, &desc, &m_pFont);
 
@@ -707,6 +709,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
 				g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
 
+				// 스페이스가 눌리면 font 바꿈
+				turn++;
+				turn = turn % 2;
+				
 				break;
 
 			}
