@@ -45,11 +45,14 @@ bool tempState = true;
 
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
-const float spherePos[BALL_COUNT][2] = { { -1.5f,-1.0f },{ -2.5f,-1.0f },{ -3.5f,-1.0f },{ -4.5f,-1.0f },{ 1.5f,-1.0f },{ 2.5f,-1.0f },{ 3.5f,-1.0f },{ -1.5f,1.0f },{ -2.5f,1.0f },{ -3.5f,1.0f },{ -4.5f,1.0f },{ 1.5f,1.0f },{ 2.5f,1.0f },{ 3.5f,1.0f },{-4.0f,0.0f },{ -3.5f,0.0f } };
+
+//0~6번까지는 plyaer1 ball, 7~13~ player 2 ball 14는 blackball 15는 흰공 //배열 위치만 기억 --> 배치는 섞음
+
+const float spherePos[BALL_COUNT][2] = { { 1.5f,0.0f },{ 1.9f,0.25f },{ 1.9f,-0.25f },{ 2.3f,0.45f },{ 2.3f,0.0f },{ 2.3f,-0.45f },{ 2.7f,0.8f },{ 2.7f,0.3f },{ 2.7f,-0.3f },{ 2.7f,-0.8f },{3.1f, 0.95f },{ 3.1f,0.45f },{ 3.1f,0.0f },{ 3.1f,-0.45f },{3.1f,-0.95f },{ -3.0f,0.0f } };
 
 const float holePos[HOLE_COUNT][2] = { { 4.2f,2.7f } ,{ 0.2f,2.7f } ,{ -4.2f,2.7f } ,{ 4.2f,- 2.7f } ,{ 0.2f,-2.7f } ,{ -4.2f,-2.7f } };
 // initialize the color of each ball (ball[0] ~ ball[BALL_COUNT])
-const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::BLACK,d3d::WHITE };
+const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::BLACK,d3d::WHITE };
 const D3DXCOLOR holeColor[HOLE_COUNT] = { d3d::BLACK,d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK };
 
 // -----------------------------------------------------------------------------
@@ -173,7 +176,8 @@ public:
 
 		return false;
 	}
-	bool isinOrder(int ballN, int player) {
+	bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
+		//true면 턴 안바뀜 // false면 턴 바뀜
 		if (player == 0) {
 			if (player1 != 6&& ballN==14) {
 				return false;
@@ -241,8 +245,16 @@ public:
 			else {
 				//if (this->ballNum == 14) exit(1); //14번공 확인
 
+				
 				tempState = isinOrder(ball.ballNum, playermode);
-				setPosition(99.99f, this->center_y, 99.99f);
+				if (this->ballNum == 15) {
+					setPosition(0.0f, this->center_y, 0.0f);
+					this->m_velocity_x = 0;
+					this->m_velocity_z = 0;
+				}
+				else {
+					setPosition(99.99f, this->center_y, 99.99f);
+				}
 
 
 			}
