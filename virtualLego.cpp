@@ -64,19 +64,19 @@ private :
 	D3DXMATRIX				matBallRoll;
 	// 이전 위치 보관, 충돌 시에 사용해야 함
 public:
-    CSphere(void)
+    CSphere(void)	// 공 생성
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
-        m_radius = 0;
-		m_velocity_x = 0;
-		m_velocity_z = 0;
-        m_pSphereMesh = NULL;
+        m_radius = 0;	// 공 반지름
+		m_velocity_x = 0;	// 공 x 속도
+		m_velocity_z = 0;	// 공 z 속도
+        m_pSphereMesh = NULL;	// ??
     }
     ~CSphere(void) {}
 
 public:
-	void setPosition(float x, float y, float z)
+	void setPosition(float x, float y, float z)	// 공 위치 설정
 	{
 		D3DXMATRIX m;
 
@@ -84,17 +84,17 @@ public:
 		this->center_y = y;
 		this->center_z = z;
 
-		D3DXMatrixTranslation(&m, x, y, z);
-		this->setLocalTransform(m);
+		D3DXMatrixTranslation(&m, x, y, z);	// 공 옮김
+		this->setLocalTransform(m);	// 공 실제로 옮김
 	}
 
-	D3DXVECTOR3 getPosition() const
+	D3DXVECTOR3 getPosition() const	// 공 위치 get
 	{
 		D3DXVECTOR3 org(center_x, center_y, center_z);
 		return org;
 	}
 
-	void adjustPosition(CSphere& ball){
+	void adjustPosition(CSphere& ball){	// 공 위치 조정
 		D3DXVECTOR3 ball_cord = ball.getCenter();
 		//보간법으로 근사하여 충돌 시점의 좌표로 이동함.
 		this->setPosition((center_x + this->pre_center_x) / 2, center_y, (center_z + this->pre_center_z) / 2);
@@ -139,7 +139,7 @@ public:
 		m_pSphereMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball) const noexcept
+	bool hasIntersected(CSphere& ball) const noexcept	// 공 충돌 판정
 	{
 		D3DXVECTOR3 cord = this->getPosition();
 		D3DXVECTOR3 ball_cord = ball.getPosition();
@@ -155,7 +155,7 @@ public:
 		return false;
 	}
 	
-	void hitBy(CSphere& ball) noexcept
+	void hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 	{
 		if (this->hasIntersected(ball))
 		{
@@ -228,18 +228,18 @@ public:
 	double getVelocity_X() { return this->m_velocity_x;	}
 	double getVelocity_Z() { return this->m_velocity_z; }
 
-	void setPower(double vx, double vz)
+	void setPower(double vx, double vz)	// 공의 속도 설정
 	{
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
 	}
 
-	void setCenter(float x, float y, float z)
+	void setCenter(float x, float y, float z)	// 공의 중심 설정
 	{
 		D3DXMATRIX m;
 		center_x=x;	center_y=y;	center_z=z;
-		D3DXMatrixTranslation(&m, x, y, z);
-		setLocalTransform(m);
+		D3DXMatrixTranslation(&m, x, y, z);	// 공 옮김
+		setLocalTransform(m);	// 공 실제로 옮김
 	}
 	
 	float getRadius(void)  const { return (float)(M_RADIUS);  }
@@ -298,7 +298,7 @@ private:
 	float					m_height;
 	
 public:
-    CWall(void)
+    CWall(void)	// 벽 생성자
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
@@ -344,7 +344,7 @@ public:
 		m_pBoundMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball) 
+	bool hasIntersected(CSphere& ball)	// 공과의 충돌 판정
 	{
 		D3DXVECTOR3 temp_coor = ball.getCenter();				//공의 위치
 		if (temp_coor.x >= 4.5-M_RADIUS || temp_coor.z >= 3 - M_RADIUS ||
@@ -354,7 +354,7 @@ public:
 		else return false;
 	}
 
-	void hitBy(CSphere& ball) 
+	void hitBy(CSphere& ball)	// 공과의 충돌 처리
 	{
 		if (hasIntersected(ball)) {//공이 벽보다 밖에 있을 경우
 			float retheta;
@@ -493,9 +493,12 @@ private:
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
 CWall	g_legowall[4];
-CSphere	g_sphere[4];
-CSphere	g_target_blueball;
+CSphere	g_sphere[4];	// 공 4개
+CSphere	g_target_blueball;	// 파란색 공
 CLight	g_light;
+
+enum { PLAYER2, PLAYER1 };
+int turn = PLAYER2;	// 차례
 
 double g_camera_pos[3] = {0.0, 7.0, -8.0};
 
@@ -503,6 +506,9 @@ double g_camera_pos[3] = {0.0, 7.0, -8.0};
 // Functions
 // -----------------------------------------------------------------------------
 
+// Font
+LPD3DXFONT m_pFont;
+D3DXFONT_DESC desc;
 
 void destroyAllLegoBlock(void)
 {
@@ -531,14 +537,14 @@ bool Setup()
 	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
-	// create four balls and set the position
+																										// create four balls and set the position
 	for (i=0;i<4;i++) {
 		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
 		g_sphere[i].setPower(0,0);
 	}
 	
-	// create blue ball for set direction
+																										// create blue ball for set direction
     if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
 	g_target_blueball.setCenter(.0f, (float)M_RADIUS , .0f);
 	
@@ -575,6 +581,22 @@ bool Setup()
     Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 	
 	g_light.setLight(Device, g_mWorld);
+
+																										// Set the font
+	memset(&desc, 0, sizeof(D3DXFONT_DESC));
+	desc.CharSet = HANGUL_CHARSET;
+	strcpy(desc.FaceName, "궁서체");
+	desc.Height = 20;
+	desc.Width = 10;
+	desc.Weight = FW_NORMAL;
+	desc.Quality = DEFAULT_QUALITY;
+	desc.MipLevels = 1;
+	desc.Italic = 0;
+	desc.OutputPrecision = OUT_DEFAULT_PRECIS;
+	desc.PitchAndFamily = FF_DONTCARE;
+
+	D3DXCreateFontIndirect(Device, &desc, &m_pFont);
+
 	return true;
 }
 
@@ -588,28 +610,43 @@ void Cleanup(void)
     g_light.destroy();
 }
 
-
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
+	RECT rect;
+	char str[100];
+	
 	if( Device )
 	{
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
-		
-		// update the position of each ball. during update, check whether each ball hit by walls.
+	
+		SetRect(&rect, 0, 0, 800, 600);
+		ZeroMemory(str, 100);
+																										// update the font by using the 차례
+		if (turn)
+		{	
+			sprintf(str, "Player 1");
+			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
+		}
+		else
+		{
+			sprintf(str, "Player 2");
+			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
+		}
+																										// update the position of each ball. during update, check whether each ball hit by walls.
 		for( i = 0; i < 4; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
+			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }									// 각 공마다 벽과 공의 충돌 처리
 		}
 
-		// check whether any two balls hit together and update the direction of balls
+																										// check whether any two balls hit together and update the direction of balls
 		for(i = 0 ;i < 4; i++){
 			for(j = 0 ; j < 4; j++) {
-				if(i >= j) {continue;}
+				if(i >= j) {continue;}																	// 공끼리의 충돌 처리
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
 		}
@@ -627,6 +664,7 @@ bool Display(float timeDelta)
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture( 0, NULL );
 	}
+
 	return true;
 }
 
