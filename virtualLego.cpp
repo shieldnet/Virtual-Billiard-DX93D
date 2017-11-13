@@ -18,9 +18,11 @@
 #include <iostream>
 #include <cassert>
 
+enum { PLAYER1, PLAYER2 };
+
 using namespace std;
 
-//Playmode
+//Playere
 #define NORMAL_MODE 0
 #define BACK_MODE 1
 #define AHEAD_MODE 2
@@ -33,9 +35,10 @@ IDirect3DDevice9* Device = NULL;
 const int Width  = 1024;
 const int Height = 768;
 int play_mode;
-int playermode = 0;
+int playermode = PLAYER1;
 int player1 = 0;
 int player2 = 7;
+int threeOut = 0;
 //bool player[16] = { false, };
 bool eigthball = false;
 bool tempState = true;
@@ -45,11 +48,14 @@ bool tempState = true;
 
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
-const float spherePos[BALL_COUNT][2] = { { -1.5f,-1.0f },{ -2.5f,-1.0f },{ -3.5f,-1.0f },{ -4.5f,-1.0f },{ 1.5f,-1.0f },{ 2.5f,-1.0f },{ 3.5f,-1.0f },{ -1.5f,1.0f },{ -2.5f,1.0f },{ -3.5f,1.0f },{ -4.5f,1.0f },{ 1.5f,1.0f },{ 2.5f,1.0f },{ 3.5f,1.0f },{-4.0f,0.0f },{ -3.5f,0.0f } };
+
+//0~6번까지는 plyaer1 ball, 7~13~ player 2 ball 14는 blackball 15는 흰공 //배열 위치만 기억 --> 배치는 섞음
+
+const float spherePos[BALL_COUNT][2] = { { 1.5f,0.0f },{ 1.9f,0.25f },{ 1.9f,-0.25f },{ 2.3f,0.45f },{ 2.3f,0.0f },{ 2.3f,-0.45f },{ 2.7f,0.8f },{ 2.7f,0.3f },{ 2.7f,-0.3f },{ 2.7f,-0.8f },{3.1f, 0.95f },{ 3.1f,0.45f },{ 3.1f,0.0f },{ 3.1f,-0.45f },{3.1f,-0.95f },{ -3.0f,0.0f } };
 
 const float holePos[HOLE_COUNT][2] = { { 4.2f,2.7f } ,{ 0.2f,2.7f } ,{ -4.2f,2.7f } ,{ 4.2f,- 2.7f } ,{ 0.2f,-2.7f } ,{ -4.2f,-2.7f } };
 // initialize the color of each ball (ball[0] ~ ball[BALL_COUNT])
-const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::RED, d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::BLACK,d3d::WHITE };
+const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::BLACK,d3d::WHITE };
 const D3DXCOLOR holeColor[HOLE_COUNT] = { d3d::BLACK,d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK };
 
 // -----------------------------------------------------------------------------
@@ -79,22 +85,24 @@ private :
 	
 	// 이전 위치 보관, 충돌 시에 사용해야 함
 public:
-	bool					isHole;
-	int						ballNum;
+
+	bool isHole;
+	int	ballNum;
 
     CSphere(void)
+
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
-        m_radius = 0;
-		m_velocity_x = 0;
-		m_velocity_z = 0;
-        m_pSphereMesh = NULL;
+        m_radius = 0;	// 공 반지름
+		m_velocity_x = 0;	// 공 x 속도
+		m_velocity_z = 0;	// 공 z 속도
+        m_pSphereMesh = NULL;	// ??
     }
     ~CSphere(void) {}
 
 public:
-	void setPosition(float x, float y, float z)
+	void setPosition(float x, float y, float z)	// 공 위치 설정
 	{
 		D3DXMATRIX m;
 
@@ -102,17 +110,17 @@ public:
 		this->center_y = y;
 		this->center_z = z;
 
-		D3DXMatrixTranslation(&m, x, y, z);
-		this->setLocalTransform(m);
+		D3DXMatrixTranslation(&m, x, y, z);	// 공 옮김
+		this->setLocalTransform(m);	// 공 실제로 옮김
 	}
 
-	D3DXVECTOR3 getPosition() const
+	D3DXVECTOR3 getPosition() const	// 공 위치 get
 	{
 		D3DXVECTOR3 org(center_x, center_y, center_z);
 		return org;
 	}
 
-	void adjustPosition(CSphere& ball){
+	void adjustPosition(CSphere& ball){	// 공 위치 조정
 		D3DXVECTOR3 ball_cord = ball.getCenter();
 		//보간법으로 근사하여 충돌 시점의 좌표로 이동함.
 		this->setPosition((center_x + this->pre_center_x) / 2, center_y, (center_z + this->pre_center_z) / 2);
@@ -158,7 +166,7 @@ public:
 		m_pSphereMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball) const noexcept
+	bool hasIntersected(CSphere& ball) const noexcept	// 공 충돌 판정
 	{
 		D3DXVECTOR3 cord = this->getPosition();
 		D3DXVECTOR3 ball_cord = ball.getPosition();
@@ -173,40 +181,11 @@ public:
 
 		return false;
 	}
-	bool isinOrder(int ballN, int player) {
-		if (player == 0) {
-			if (player1 != 6&& ballN==14) {
-				return false;
-			}
-			if (player1 == 6 && ballN == 14) {
-				return true;
-			}
-			if (player1 == ballN ) { 
-				player1++;
-				return true;
-			}
-
-		}
-		else if (player == 1) {
-			if (player2 != 13 && ballN == 14) {
-				return false;
-			}
-			if (player2 == 13 && ballN == 14) {
-				return true;
-			}
-
-			if (player2 == ballN+7) {
-				player2++;
-				return true;
-			}
-		
-		}
-		return false;
 	
-	}
 	
-	void hitBy(CSphere& ball) noexcept
+	void hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 	{
+		
 		if (this->hasIntersected(ball))
 		{
 			if (!ball.isHole) {
@@ -235,16 +214,19 @@ public:
 
 			this->setPower(vaxp * cos_t - vazp * sin_t, vaxp * sin_t + vazp * cos_t);
 			ball.setPower(vbxp * cos_t - vbzp * sin_t, vbxp * sin_t + vbzp * cos_t);
-			tempState = isinOrder(ball.ballNum, playermode);
+			//tempState = isinOrder(ball.ballNum, playermode);
 			
 			}
 			else {
-				//if (this->ballNum == 14) exit(1); //14번공 확인
+				if(this->ballNum!=15 && this->ballNum != 14) this->setPosition(99.99f, this->center_y, 99.99f);
 
-				tempState = isinOrder(ball.ballNum, playermode);
-				setPosition(99.99f, this->center_y, 99.99f);
-
-
+				
+				else {
+					/*this->setPosition(0.0f, this->center_y, 0.0f);
+					this->m_velocity_x = 0;
+					this->m_velocity_z = 0;*/
+				}
+				
 			}
 		}
 	}
@@ -291,18 +273,18 @@ public:
 	double getVelocity_X() { return this->m_velocity_x;	}
 	double getVelocity_Z() { return this->m_velocity_z; }
 
-	void setPower(double vx, double vz)
+	void setPower(double vx, double vz)	// 공의 속도 설정
 	{
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
 	}
 
-	void setCenter(float x, float y, float z)
+	void setCenter(float x, float y, float z)	// 공의 중심 설정
 	{
 		D3DXMATRIX m;
 		center_x=x;	center_y=y;	center_z=z;
-		D3DXMatrixTranslation(&m, x, y, z);
-		setLocalTransform(m);
+		D3DXMatrixTranslation(&m, x, y, z);	// 공 옮김
+		setLocalTransform(m);	// 공 실제로 옮김
 	}
 	
 	float getRadius(void)  const { return (float)(M_RADIUS);  }
@@ -399,12 +381,107 @@ private:
 	float					m_velocity_z;
 	float					pre_center_x, pre_center_z;
 	D3DXMATRIX				matBallRoll;
-
-
-	
-
 };
 
+class Referee {
+private:
+	CSphere* sp;
+	CHole* hp;
+	int i, j, k;
+
+
+
+public:
+	Referee(CSphere* s,CHole* h) {
+		
+		sp = s;
+		hp = h;
+		
+
+	
+	}
+
+	void isWBinHole() {
+		for (int i = 0; i < 15; i++) {
+			if (!sp[15].hasIntersected(sp[i])) {
+				for (int j = 0; j < 6; j++) {
+					if (sp[15].hasIntersected(hp[j])) {
+
+						sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
+						sp[15].setPower(0.0f, 0.0f);
+						threeOut++;
+						cout << "goalin" << threeOut << endl;
+
+						if (threeOut == 3) {
+							playermode++;
+							playermode = playermode % 2;
+							threeOut = 0;
+						}
+
+					}
+				}
+
+			}
+
+		}
+	}
+
+	void isWorthNothing() {
+		bool spbool = true, hpbool = true;
+		if ((abs(sp[15].getVelocity_X()) > 0.01) && (abs(sp[15].getVelocity_Z()) > 0.01)) {
+			for (i = 0; i < BALL_COUNT; i++) {
+					for (j = 0; j < HOLE_COUNT; j++) {
+						spbool = sp[i].hasIntersected(hp[j]);
+					}
+					
+			}
+		
+			cout << "worth!"  << " " << spbool<<endl;
+		}
+		if (!spbool&&(abs(sp[15].getVelocity_X()) < 0.1) && (abs(sp[15].getVelocity_Z()) < 0.1) ){
+		
+			cout << "you worth nothing" << endl;
+	
+
+		}
+		
+		
+	
+	}
+	void isEightBallLegit() {
+
+
+		for (k = 0; k < HOLE_COUNT; k++) {
+
+			if (sp[14].hasIntersected(hp[k])) {
+				if (playermode == PLAYER1) {
+					if (player1 == 7) cout << "player1 legit" << endl;
+					else {
+						cout << "player1 not legit" << endl;
+						sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+						if (playermode == PLAYER1) playermode = PLAYER2;
+					}
+				}
+				else if (playermode == PLAYER2) {
+					if (player2 == 14) cout << "player2 legit" << endl;
+					else {
+						cout << "player2 not legit" << endl;
+						sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+						if (playermode == PLAYER2) playermode = PLAYER1;
+					}
+					
+
+				}
+			}
+
+
+		}
+		
+	
+	}
+
+	
+};
 
 
 // -----------------------------------------------------------------------------
@@ -422,7 +499,7 @@ private:
 	float					m_height;
 	
 public:
-    CWall(void)
+    CWall(void)	// 벽 생성자
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
@@ -469,7 +546,7 @@ public:
 		m_pBoundMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball) 
+	bool hasIntersected(CSphere& ball)	// 공과의 충돌 판정
 	{
 		D3DXVECTOR3 temp_coor = ball.getCenter();				//공의 위치
 		if (temp_coor.x >= 4.5-M_RADIUS || temp_coor.z >= 3 - M_RADIUS ||
@@ -479,7 +556,7 @@ public:
 		else return false;
 	}
 
-	void hitBy(CSphere& ball) 
+	void hitBy(CSphere& ball)	// 공과의 충돌 처리
 	{
 		if (hasIntersected(ball)) {//공이 벽보다 밖에 있을 경우
 			float retheta;
@@ -629,6 +706,9 @@ double g_camera_pos[3] = {0.0, 7.0, -8.0};
 // Functions
 // -----------------------------------------------------------------------------
 
+// Font
+LPD3DXFONT m_pFont;
+D3DXFONT_DESC desc;
 
 void destroyAllLegoBlock(void)
 {
@@ -659,6 +739,7 @@ bool Setup()
 
 	// create four balls and set the position
 	for (i=0;i<BALL_COUNT;i++) {
+
 		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
 		g_sphere[i].setPower(0,0);
@@ -671,7 +752,7 @@ bool Setup()
 		g_hole[i].setPower(0, 0);
 	}
 	
-	// create blue ball for set direction
+																										// create blue ball for set direction
     if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
 	g_target_blueball.setCenter(.0f, (float)M_RADIUS , .0f);
 	
@@ -708,6 +789,22 @@ bool Setup()
     Device->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
 	
 	g_light.setLight(Device, g_mWorld);
+
+																										// Set the font
+	memset(&desc, 0, sizeof(D3DXFONT_DESC));
+	desc.CharSet = HANGUL_CHARSET;
+	strcpy(desc.FaceName, "궁서체");
+	desc.Height = 20;
+	desc.Width = 10;
+	desc.Weight = FW_NORMAL;
+	desc.Quality = DEFAULT_QUALITY;
+	desc.MipLevels = 1;
+	desc.Italic = 0;
+	desc.OutputPrecision = OUT_DEFAULT_PRECIS;
+	desc.PitchAndFamily = FF_DONTCARE;
+
+	D3DXCreateFontIndirect(Device, &desc, &m_pFont);
+
 	return true;
 }
 
@@ -721,19 +818,45 @@ void Cleanup(void)
     g_light.destroy();
 }
 
-
 // timeDelta represents the time between the current image frame and the last image frame.
 // the distance of moving balls should be "velocity * timeDelta"
 bool Display(float timeDelta)
 {
 	int i=0;
 	int j = 0;
+	RECT rect;
+	char str[100];
+	
 	int k = 0;
+	Referee referee(g_sphere,g_hole);
 	if( Device )
 	{
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
+	
+		SetRect(&rect, 0, 0, 800, 600);
+		ZeroMemory(str, 100);
+																										// display the font
+		if (!playermode)
+		{	
+			sprintf(str, "Player 1");
+			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
+		}
+		else
+		{
+			sprintf(str, "Player 2");
+			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
+		}
 		
+																										// update the font
+		if (tempState == false)
+		{
+			playermode++;
+			playermode = playermode % 2;
+			threeOut = 0;
+			tempState = true;
+		}
+
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for( i = 0; i < BALL_COUNT; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
@@ -758,6 +881,9 @@ bool Display(float timeDelta)
 				
 			}
 		}
+		referee.isWBinHole();
+		//referee.isWorthNothing();
+		referee.isEightBallLegit();
 	
 
 		// draw plane, walls, and spheres
@@ -779,6 +905,7 @@ bool Display(float timeDelta)
 		Device->Present(0, 0, 0, 0);
 		Device->SetTexture( 0, NULL );
 	}
+
 	return true;
 }
 
@@ -834,7 +961,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			float dx;
 			float dy;
 			
-            if (LOWORD(wParam) & MK_LBUTTON) {
+            if (LOWORD(wParam) & MK_RBUTTON) {
 				
                 if (isReset) {
                     isReset = false;
@@ -863,7 +990,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             } else {
                 isReset = true;
 				
-				if (LOWORD(wParam) & MK_RBUTTON) {
+				if (LOWORD(wParam) & MK_LBUTTON) {
 					dx = (old_x - new_x);// * 0.01f;
 					dy = (old_y - new_y);// * 0.01f;
 		
