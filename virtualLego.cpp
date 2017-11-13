@@ -18,11 +18,11 @@
 #include <iostream>
 #include <cassert>
 
-enum { PLAYER2, PLAYER1 };
+enum { PLAYER1, PLAYER2 };
 
 using namespace std;
 
-//Playmode
+//Playere
 #define NORMAL_MODE 0
 #define BACK_MODE 1
 #define AHEAD_MODE 2
@@ -181,38 +181,7 @@ public:
 
 		return false;
 	}
-	bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
-		//true면 턴 안바뀜 // false면 턴 바뀜
-		if (player == 0) {
-			if (player1 != 6&& ballN==14) {
-				return false;
-			}
-			if (player1 == 6 && ballN == 14) {
-				return true;
-			}
-			if (player1 == ballN ) { 
-				player1++;
-				return true;
-			}
-
-		}
-		else if (player == 1) {
-			if (player2 != 13 && ballN == 14) {
-				return false;
-			}
-			if (player2 == 13 && ballN == 14) {
-				return true;
-			}
-
-			if (player2 == ballN+7) {
-				player2++;
-				return true;
-			}
-		
-		}
-		return false;
 	
-	}
 	
 	void hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 	{
@@ -249,29 +218,16 @@ public:
 			
 			}
 			else {
-				//if (this->ballNum == 14) exit(1); //14번공 확인
-				if (threeOut <= 1) {
-					//cout << threeOut << endl;
-					threeOut++;
-				}
+				if(this->ballNum!=15 && this->ballNum != 14) this->setPosition(99.99f, this->center_y, 99.99f);
+
+				
 				else {
-					tempState = isinOrder(ball.ballNum, playermode);
-					//threeOut == 0;
-				}
-				if (this->ballNum == 15) {
-					setPosition(0.0f, this->center_y, 0.0f);
+					/*this->setPosition(0.0f, this->center_y, 0.0f);
 					this->m_velocity_x = 0;
-					this->m_velocity_z = 0;
+					this->m_velocity_z = 0;*/
 				}
-				else {
-					setPosition(99.99f, this->center_y, 99.99f);
-				}
-				if (this->m_velocity_x == 0 && this->m_velocity_z == 0) {
-					playermode++;
-					playermode %= 2;
-				}
+				
 			}
-			
 		}
 	}
 	
@@ -425,12 +381,107 @@ private:
 	float					m_velocity_z;
 	float					pre_center_x, pre_center_z;
 	D3DXMATRIX				matBallRoll;
-
-
-	
-
 };
 
+class Referee {
+private:
+	CSphere* sp;
+	CHole* hp;
+	int i, j, k;
+
+
+
+public:
+	Referee(CSphere* s,CHole* h) {
+		
+		sp = s;
+		hp = h;
+		
+
+	
+	}
+
+	void isWBinHole() {
+		for (int i = 0; i < 15; i++) {
+			if (!sp[15].hasIntersected(sp[i])) {
+				for (int j = 0; j < 6; j++) {
+					if (sp[15].hasIntersected(hp[j])) {
+
+						sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
+						sp[15].setPower(0.0f, 0.0f);
+						threeOut++;
+						cout << "goalin" << threeOut << endl;
+
+						if (threeOut == 3) {
+							playermode++;
+							playermode = playermode % 2;
+							threeOut = 0;
+						}
+
+					}
+				}
+
+			}
+
+		}
+	}
+
+	void isWorthNothing() {
+		bool spbool = true, hpbool = true;
+		if ((abs(sp[15].getVelocity_X()) > 0.01) && (abs(sp[15].getVelocity_Z()) > 0.01)) {
+			for (i = 0; i < BALL_COUNT; i++) {
+					for (j = 0; j < HOLE_COUNT; j++) {
+						spbool = sp[i].hasIntersected(hp[j]);
+					}
+					
+			}
+		
+			cout << "worth!"  << " " << spbool<<endl;
+		}
+		if (!spbool&&(abs(sp[15].getVelocity_X()) < 0.1) && (abs(sp[15].getVelocity_Z()) < 0.1) ){
+		
+			cout << "you worth nothing" << endl;
+	
+
+		}
+		
+		
+	
+	}
+	void isEightBallLegit() {
+
+
+		for (k = 0; k < HOLE_COUNT; k++) {
+
+			if (sp[14].hasIntersected(hp[k])) {
+				if (playermode == PLAYER1) {
+					if (player1 == 7) cout << "player1 legit" << endl;
+					else {
+						cout << "player1 not legit" << endl;
+						sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+						if (playermode == PLAYER1) playermode = PLAYER2;
+					}
+				}
+				else if (playermode == PLAYER2) {
+					if (player2 == 14) cout << "player2 legit" << endl;
+					else {
+						cout << "player2 not legit" << endl;
+						sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+						if (playermode == PLAYER2) playermode = PLAYER1;
+					}
+					
+
+				}
+			}
+
+
+		}
+		
+	
+	}
+
+	
+};
 
 
 // -----------------------------------------------------------------------------
@@ -777,7 +828,7 @@ bool Display(float timeDelta)
 	char str[100];
 	
 	int k = 0;
-
+	Referee referee(g_sphere,g_hole);
 	if( Device )
 	{
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
@@ -786,7 +837,7 @@ bool Display(float timeDelta)
 		SetRect(&rect, 0, 0, 800, 600);
 		ZeroMemory(str, 100);
 																										// display the font
-		if (playermode)
+		if (!playermode)
 		{	
 			sprintf(str, "Player 1");
 			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
@@ -830,6 +881,9 @@ bool Display(float timeDelta)
 				
 			}
 		}
+		referee.isWBinHole();
+		//referee.isWorthNothing();
+		referee.isEightBallLegit();
 	
 
 		// draw plane, walls, and spheres
@@ -907,7 +961,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			float dx;
 			float dy;
 			
-            if (LOWORD(wParam) & MK_LBUTTON) {
+            if (LOWORD(wParam) & MK_RBUTTON) {
 				
                 if (isReset) {
                     isReset = false;
@@ -936,7 +990,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             } else {
                 isReset = true;
 				
-				if (LOWORD(wParam) & MK_RBUTTON) {
+				if (LOWORD(wParam) & MK_LBUTTON) {
 					dx = (old_x - new_x);// * 0.01f;
 					dy = (old_y - new_y);// * 0.01f;
 		
