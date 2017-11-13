@@ -2,7 +2,7 @@
 //
 // File: virtualLego.cpp
 //
-// Original Author: ¹ÚÃ¢Çö Chang-hyeon Park, 
+// Original Author: ë°•ì°½í˜„ Chang-hyeon Park, 
 // Modified by Bong-Soo Sohn and Dong-Jun Kim
 // 
 // Originally programmed for Virtual LEGO. 
@@ -18,11 +18,11 @@
 #include <iostream>
 #include <cassert>
 
-enum { PLAYER2, PLAYER1 };
+enum { PLAYER1, PLAYER2 };
 
 using namespace std;
 
-//Playmode
+//Playere
 #define NORMAL_MODE 0
 #define BACK_MODE 1
 #define AHEAD_MODE 2
@@ -49,7 +49,7 @@ bool tempState = true;
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
 
-//0~6¹ø±îÁö´Â plyaer1 ball, 7~13~ player 2 ball 14´Â blackball 15´Â Èò°ø //¹è¿­ À§Ä¡¸¸ ±â¾ï --> ¹èÄ¡´Â ¼¯À½
+//0~6ë²ˆê¹Œì§€ëŠ” plyaer1 ball, 7~13~ player 2 ball 14ëŠ” blackball 15ëŠ” í°ê³µ //ë°°ì—´ ìœ„ì¹˜ë§Œ ê¸°ì–µ --> ë°°ì¹˜ëŠ” ì„ìŒ
 
 const float spherePos[BALL_COUNT][2] = { { 1.5f,0.0f },{ 1.9f,0.25f },{ 1.9f,-0.25f },{ 2.3f,0.45f },{ 2.3f,0.0f },{ 2.3f,-0.45f },{ 2.7f,0.8f },{ 2.7f,0.3f },{ 2.7f,-0.3f },{ 2.7f,-0.8f },{3.1f, 0.95f },{ 3.1f,0.45f },{ 3.1f,0.0f },{ 3.1f,-0.45f },{3.1f,-0.95f },{ -3.0f,0.0f } };
 
@@ -83,7 +83,7 @@ private :
 	float					pre_center_x, pre_center_z; 
 	D3DXMATRIX				matBallRoll;
 	
-	// ÀÌÀü À§Ä¡ º¸°ü, Ãæµ¹ ½Ã¿¡ »ç¿ëÇØ¾ß ÇÔ
+	// ì´ì „ ìœ„ì¹˜ ë³´ê´€, ì¶©ëŒ ì‹œì— ì‚¬ìš©í•´ì•¼ í•¨
 public:
 
 	bool isHole;
@@ -94,15 +94,15 @@ public:
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
-        m_radius = 0;	// °ø ¹İÁö¸§
-		m_velocity_x = 0;	// °ø x ¼Óµµ
-		m_velocity_z = 0;	// °ø z ¼Óµµ
+        m_radius = 0;	// ê³µ ë°˜ì§€ë¦„
+		m_velocity_x = 0;	// ê³µ x ì†ë„
+		m_velocity_z = 0;	// ê³µ z ì†ë„
         m_pSphereMesh = NULL;	// ??
     }
     ~CSphere(void) {}
 
 public:
-	void setPosition(float x, float y, float z)	// °ø À§Ä¡ ¼³Á¤
+	void setPosition(float x, float y, float z)	// ê³µ ìœ„ì¹˜ ì„¤ì •
 	{
 		D3DXMATRIX m;
 
@@ -110,19 +110,19 @@ public:
 		this->center_y = y;
 		this->center_z = z;
 
-		D3DXMatrixTranslation(&m, x, y, z);	// °ø ¿Å±è
-		this->setLocalTransform(m);	// °ø ½ÇÁ¦·Î ¿Å±è
+		D3DXMatrixTranslation(&m, x, y, z);	// ê³µ ì˜®ê¹€
+		this->setLocalTransform(m);	// ê³µ ì‹¤ì œë¡œ ì˜®ê¹€
 	}
 
-	D3DXVECTOR3 getPosition() const	// °ø À§Ä¡ get
+	D3DXVECTOR3 getPosition() const	// ê³µ ìœ„ì¹˜ get
 	{
 		D3DXVECTOR3 org(center_x, center_y, center_z);
 		return org;
 	}
 
-	void adjustPosition(CSphere& ball){	// °ø À§Ä¡ Á¶Á¤
+	void adjustPosition(CSphere& ball){	// ê³µ ìœ„ì¹˜ ì¡°ì •
 		D3DXVECTOR3 ball_cord = ball.getCenter();
-		//º¸°£¹ıÀ¸·Î ±Ù»çÇÏ¿© Ãæµ¹ ½ÃÁ¡ÀÇ ÁÂÇ¥·Î ÀÌµ¿ÇÔ.
+		//ë³´ê°„ë²•ìœ¼ë¡œ ê·¼ì‚¬í•˜ì—¬ ì¶©ëŒ ì‹œì ì˜ ì¢Œí‘œë¡œ ì´ë™í•¨.
 		this->setPosition((center_x + this->pre_center_x) / 2, center_y, (center_z + this->pre_center_z) / 2);
 		ball.setPosition((ball_cord.x + ball.pre_center_x) / 2, ball_cord.y, (ball_cord.z + ball.pre_center_z) / 2);
 		if (this->hasIntersected(ball))
@@ -166,7 +166,7 @@ public:
 		m_pSphereMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball) const noexcept	// °ø Ãæµ¹ ÆÇÁ¤
+	bool hasIntersected(CSphere& ball) const noexcept	// ê³µ ì¶©ëŒ íŒì •
 	{
 		D3DXVECTOR3 cord = this->getPosition();
 		D3DXVECTOR3 ball_cord = ball.getPosition();
@@ -181,8 +181,8 @@ public:
 
 		return false;
 	}
-	bool isinOrder(int ballN, int player) { //plyaer 1ÀÇ °øÀÌ 0~6±îÁö //player2°¡ 7~~13±îÁö // 14´Â black ballÀÌ°í 15Àº white ball
-		//true¸é ÅÏ ¾È¹Ù²ñ // false¸é ÅÏ ¹Ù²ñ
+	bool isinOrder(int ballN, int player) { //plyaer 1ì˜ ê³µì´ 0~6ê¹Œì§€ //player2ê°€ 7~~13ê¹Œì§€ // 14ëŠ” black ballì´ê³  15ì€ white ball
+		//trueë©´ í„´ ì•ˆë°”ë€œ // falseë©´ í„´ ë°”ë€œ
 		if (player == 0) {
 			if (player1 != 6&& ballN==14) {
 				return false;
@@ -212,9 +212,8 @@ public:
 		}
 		return false;
 	
-	}
 	
-	void hitBy(CSphere& ball) noexcept	// °ø Ãæµ¹ ½Ã Ã³¸®
+	void hitBy(CSphere& ball) noexcept	// ê³µ ì¶©ëŒ ì‹œ ì²˜ë¦¬
 	{
 		
 		if (this->hasIntersected(ball))
@@ -223,7 +222,7 @@ public:
 			
 			adjustPosition(ball);
 			D3DXVECTOR3 ball_cord = ball.getPosition();
-			//µÎ °ø »çÀÌÀÇ ¹æÇâ º¤ÅÍ
+			//ë‘ ê³µ ì‚¬ì´ì˜ ë°©í–¥ ë²¡í„°
 			double d_x = center_x - ball_cord.x;
 			double d_z = center_z - ball_cord.z;
 			double size_d = sqrt((d_x * d_x) + (d_z * d_z));
@@ -249,26 +248,13 @@ public:
 			
 			}
 			else {
-				//if (this->ballNum == 14) exit(1); //14¹ø°ø È®ÀÎ
-				if (threeOut <= 1) {
-					//cout << threeOut << endl;
-					threeOut++;
-				}
+				if(this->ballNum!=15 && this->ballNum != 14) this->setPosition(99.99f, this->center_y, 99.99f);
+
+				
 				else {
-					tempState = isinOrder(ball.ballNum, playermode);
-					//threeOut == 0;
-				}
-				if (this->ballNum == 15) {
-					setPosition(0.0f, this->center_y, 0.0f);
+					/*this->setPosition(0.0f, this->center_y, 0.0f);
 					this->m_velocity_x = 0;
-					this->m_velocity_z = 0;
-				}
-				else {
-					setPosition(99.99f, this->center_y, 99.99f);
-				}
-				if (this->m_velocity_x == 0 && this->m_velocity_z == 0) {
-					playermode++;
-					playermode %= 2;
+					this->m_velocity_z = 0;*/
 				}
 			}
 			
@@ -311,24 +297,24 @@ public:
 		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0) rate = 0;
 
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);// °øÀÌ ¿òÁ÷ÀÏ ¶§¸¶´Ù, ¼Óµµ¸¦ ³·Ãã
+		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);// ê³µì´ ì›€ì§ì¼ ë•Œë§ˆë‹¤, ì†ë„ë¥¼ ë‚®ì¶¤
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
 	double getVelocity_Z() { return this->m_velocity_z; }
 
-	void setPower(double vx, double vz)	// °øÀÇ ¼Óµµ ¼³Á¤
+	void setPower(double vx, double vz)	// ê³µì˜ ì†ë„ ì„¤ì •
 	{
 		this->m_velocity_x = vx;
 		this->m_velocity_z = vz;
 	}
 
-	void setCenter(float x, float y, float z)	// °øÀÇ Áß½É ¼³Á¤
+	void setCenter(float x, float y, float z)	// ê³µì˜ ì¤‘ì‹¬ ì„¤ì •
 	{
 		D3DXMATRIX m;
 		center_x=x;	center_y=y;	center_z=z;
-		D3DXMatrixTranslation(&m, x, y, z);	// °ø ¿Å±è
-		setLocalTransform(m);	// °ø ½ÇÁ¦·Î ¿Å±è
+		D3DXMatrixTranslation(&m, x, y, z);	// ê³µ ì˜®ê¹€
+		setLocalTransform(m);	// ê³µ ì‹¤ì œë¡œ ì˜®ê¹€
 	}
 	
 	float getRadius(void)  const { return (float)(M_RADIUS);  }
@@ -340,7 +326,7 @@ public:
         return org;
     }
 	
-	void setDX(float dx)				//x, yÀÇ º¯È­·®¿¡ ´ëÇÑ getter & setter ÇÔ¼ö
+	void setDX(float dx)				//x, yì˜ ë³€í™”ëŸ‰ì— ëŒ€í•œ getter & setter í•¨ìˆ˜
 	{
 		m_dx = dx;
 	}
@@ -425,12 +411,107 @@ private:
 	float					m_velocity_z;
 	float					pre_center_x, pre_center_z;
 	D3DXMATRIX				matBallRoll;
-
-
-	
-
 };
 
+class Referee {
+private:
+	CSphere* sp;
+	CHole* hp;
+	int i, j, k;
+
+
+
+public:
+	Referee(CSphere* s,CHole* h) {
+		
+		sp = s;
+		hp = h;
+		
+
+	
+	}
+
+	void isWBinHole() {
+		for (int i = 0; i < 15; i++) {
+			if (!sp[15].hasIntersected(sp[i])) {
+				for (int j = 0; j < 6; j++) {
+					if (sp[15].hasIntersected(hp[j])) {
+
+						sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
+						sp[15].setPower(0.0f, 0.0f);
+						threeOut++;
+						cout << "goalin" << threeOut << endl;
+
+						if (threeOut == 3) {
+							playermode++;
+							playermode = playermode % 2;
+							threeOut = 0;
+						}
+
+					}
+				}
+
+			}
+
+		}
+	}
+
+	void isWorthNothing() {
+		bool spbool = true, hpbool = true;
+		if ((abs(sp[15].getVelocity_X()) > 0.01) && (abs(sp[15].getVelocity_Z()) > 0.01)) {
+			for (i = 0; i < BALL_COUNT; i++) {
+					for (j = 0; j < HOLE_COUNT; j++) {
+						spbool = sp[i].hasIntersected(hp[j]);
+					}
+					
+			}
+		
+			cout << "worth!"  << " " << spbool<<endl;
+		}
+		if (!spbool&&(abs(sp[15].getVelocity_X()) < 0.1) && (abs(sp[15].getVelocity_Z()) < 0.1) ){
+		
+			cout << "you worth nothing" << endl;
+	
+
+		}
+		
+		
+	
+	}
+	void isEightBallLegit() {
+
+
+		for (k = 0; k < HOLE_COUNT; k++) {
+
+			if (sp[14].hasIntersected(hp[k])) {
+				if (playermode == PLAYER1) {
+					if (player1 == 7) cout << "player1 legit" << endl;
+					else {
+						cout << "player1 not legit" << endl;
+						sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+						if (playermode == PLAYER1) playermode = PLAYER2;
+					}
+				}
+				else if (playermode == PLAYER2) {
+					if (player2 == 14) cout << "player2 legit" << endl;
+					else {
+						cout << "player2 not legit" << endl;
+						sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+						if (playermode == PLAYER2) playermode = PLAYER1;
+					}
+					
+
+				}
+			}
+
+
+		}
+		
+	
+	}
+
+	
+};
 
 
 // -----------------------------------------------------------------------------
@@ -448,7 +529,7 @@ private:
 	float					m_height;
 	
 public:
-    CWall(void)	// º® »ı¼ºÀÚ
+    CWall(void)	// ë²½ ìƒì„±ì
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
@@ -495,9 +576,9 @@ public:
 		m_pBoundMesh->DrawSubset(0);
     }
 	
-	bool hasIntersected(CSphere& ball)	// °ø°úÀÇ Ãæµ¹ ÆÇÁ¤
+	bool hasIntersected(CSphere& ball)	// ê³µê³¼ì˜ ì¶©ëŒ íŒì •
 	{
-		D3DXVECTOR3 temp_coor = ball.getCenter();				//°øÀÇ À§Ä¡
+		D3DXVECTOR3 temp_coor = ball.getCenter();				//ê³µì˜ ìœ„ì¹˜
 		if (temp_coor.x >= 4.5-M_RADIUS || temp_coor.z >= 3 - M_RADIUS ||
 			temp_coor.x <= -(4.5 - M_RADIUS) || temp_coor.z <= -(3 - M_RADIUS)) {
 			return true;
@@ -505,25 +586,25 @@ public:
 		else return false;
 	}
 
-	void hitBy(CSphere& ball)	// °ø°úÀÇ Ãæµ¹ Ã³¸®
+	void hitBy(CSphere& ball)	// ê³µê³¼ì˜ ì¶©ëŒ ì²˜ë¦¬
 	{
-		if (hasIntersected(ball)) {//°øÀÌ º®º¸´Ù ¹Û¿¡ ÀÖÀ» °æ¿ì
+		if (hasIntersected(ball)) {//ê³µì´ ë²½ë³´ë‹¤ ë°–ì— ìˆì„ ê²½ìš°
 			float retheta;
 			D3DXVECTOR3 temp_coor = ball.getCenter();
-			if (temp_coor.x > 4.4-M_RADIUS) {						//¿À¸¥ÂÊ º®
+			if (temp_coor.x > 4.4-M_RADIUS) {						//ì˜¤ë¥¸ìª½ ë²½
 				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
 				ball.setCenter(4.4 - M_RADIUS, temp_coor.y, temp_coor.z);
 
 			}
-			if (temp_coor.x < -(4.4 - M_RADIUS)) {						//¿ŞÂÊ º®
+			if (temp_coor.x < -(4.4 - M_RADIUS)) {						//ì™¼ìª½ ë²½
 				ball.setPower(-ball.getVelocity_X(), ball.getVelocity_Z());
 				ball.setCenter(-(4.4 - M_RADIUS), temp_coor.y, temp_coor.z);
 			}
-			if (temp_coor.z > 2.9-M_RADIUS) {					//À§ÂÊ º®
+			if (temp_coor.z > 2.9-M_RADIUS) {					//ìœ„ìª½ ë²½
 				ball.setPower(ball.getVelocity_X(), -ball.getVelocity_Z());
 				ball.setCenter(temp_coor.x, temp_coor.y, 2.9-M_RADIUS);
 			}
-			if (temp_coor.z < -(2.9 - M_RADIUS)) {					//¾Æ·¡ÂÊ º®
+			if (temp_coor.z < -(2.9 - M_RADIUS)) {					//ì•„ë˜ìª½ ë²½
 				ball.setPower(ball.getVelocity_X(), -ball.getVelocity_Z());
 				ball.setCenter(temp_coor.x, temp_coor.y, -(2.9 - M_RADIUS));
 			}
@@ -742,7 +823,7 @@ bool Setup()
 																										// Set the font
 	memset(&desc, 0, sizeof(D3DXFONT_DESC));
 	desc.CharSet = HANGUL_CHARSET;
-	strcpy(desc.FaceName, "±Ã¼­Ã¼");
+	strcpy(desc.FaceName, "ê¶ì„œì²´");
 	desc.Height = 20;
 	desc.Width = 10;
 	desc.Weight = FW_NORMAL;
@@ -777,7 +858,9 @@ bool Display(float timeDelta)
 	char str[100];
 	
 	int k = 0;
-
+  
+	Referee referee(g_sphere,g_hole);
+  
 	if( Device )
 	{
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
@@ -786,7 +869,8 @@ bool Display(float timeDelta)
 		SetRect(&rect, 0, 0, 800, 600);
 		ZeroMemory(str, 100);
 																										// display the font
-		if (playermode)
+		if (!playermode)
+
 		{	
 			sprintf(str, "Player 1");
 			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
@@ -830,6 +914,9 @@ bool Display(float timeDelta)
 				
 			}
 		}
+		referee.isWBinHole();
+		//referee.isWorthNothing();
+		referee.isEightBallLegit();
 	
 
 		// draw plane, walls, and spheres
@@ -887,10 +974,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 				D3DXVECTOR3	whitepos = g_sphere[15].getCenter();
 				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
-					pow(targetpos.z - whitepos.z, 2)));		// ±âº» 1 »çºĞ¸é
-				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 »çºĞ¸é
-				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 »çºĞ¸é
-				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0){ theta = PI + theta; } // 3 »çºĞ¸é
+					pow(targetpos.z - whitepos.z, 2)));		// ê¸°ë³¸ 1 ì‚¬ë¶„ë©´
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 ì‚¬ë¶„ë©´
+				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 ì‚¬ë¶„ë©´
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0){ theta = PI + theta; } // 3 ì‚¬ë¶„ë©´
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
 				g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
 
@@ -907,7 +994,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			float dx;
 			float dy;
 			
-            if (LOWORD(wParam) & MK_LBUTTON) {
+            if (LOWORD(wParam) & MK_RBUTTON) {
 				
                 if (isReset) {
                     isReset = false;
@@ -936,7 +1023,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             } else {
                 isReset = true;
 				
-				if (LOWORD(wParam) & MK_RBUTTON) {
+				if (LOWORD(wParam) & MK_LBUTTON) {
 					dx = (old_x - new_x);// * 0.01f;
 					dy = (old_y - new_y);// * 0.01f;
 		
