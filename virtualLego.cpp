@@ -1,4 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
 //
 // File: virtualLego.cpp
 //
@@ -8,7 +7,7 @@
 // Originally programmed for Virtual LEGO. 
 // Modified later to program for Virtual Billiard.
 //        
-////////////////////////////////////////////////////////////////////////////////
+
 #pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
 #include "d3dUtility.h"
 #include <vector>
@@ -90,7 +89,6 @@ public:
 	int	ballNum;
 
     CSphere(void)
-
     {
         D3DXMatrixIdentity(&m_mLocal);
         ZeroMemory(&m_mtrl, sizeof(m_mtrl));
@@ -211,7 +209,7 @@ public:
 		
 		}
 		return false;
-	
+	}
 	
 	void hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 	{
