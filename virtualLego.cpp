@@ -27,6 +27,7 @@ using namespace std;
 #define AHEAD_MODE 2
 #define BALL_COUNT 16
 #define HOLE_COUNT 6
+#define FVF_VERTEX    D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1
 
 IDirect3DDevice9* Device = NULL;
 
@@ -42,8 +43,13 @@ int threeOut = 0;
 bool eigthball = false;
 bool tempState = true;
 
-
-
+struct _VERTEX
+{
+	D3DXVECTOR3 pos; // vertex position
+	D3DXVECTOR3 norm; // vertex normal
+	float tu; // texture coordinates
+	float tv;
+};
 
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
@@ -81,7 +87,8 @@ private :
 	float					m_velocity_z;
 	float					pre_center_x, pre_center_z; 
 	D3DXMATRIX				matBallRoll;
-	
+	IDirect3DTexture9* Texture = nullptr;
+	// 이미지 texture
 	// 이전 위치 보관, 충돌 시에 사용해야 함
 public:
 
@@ -129,31 +136,95 @@ public:
 			ball.setPosition(ball.pre_center_x, ball_cord.y, ball.pre_center_z);
 		}
 	}
-    bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE)
-    {
-        if (NULL == pDevice)
-            return false;
-		
-        m_mtrl.Ambient  = color;
-        m_mtrl.Diffuse  = color;
-        m_mtrl.Specular = color;
-        m_mtrl.Emissive = d3d::BLACK;
-        m_mtrl.Power    = 5.0f;
-		
-		
-        if (FAILED(D3DXCreateSphere(pDevice, getRadius(), 50, 50, &m_pSphereMesh, NULL)))
-            return false;
-        return true;
-    }
-	
+	bool create(IDirect3DDevice9* pDevice, int num, D3DXCOLOR color = d3d::WHITE)
+	{
+		if (NULL == pDevice)
+			return false;
+
+		m_mtrl.Ambient = d3d::WHITE;
+		m_mtrl.Diffuse = d3d::WHITE;
+		m_mtrl.Specular = d3d::WHITE;
+		m_mtrl.Emissive = d3d::BLACK;
+		m_mtrl.Power = 5.0f;
+
+		string filePath = "./image/" + to_string(num + 1) + ".jpg";
+		this->m_pSphereMesh = _createMappedSphere(pDevice);
+
+		if (FAILED(D3DXCreateTextureFromFile(pDevice, filePath.c_str(), &Texture)))
+		{
+			return false;
+		}
+		return true;
+
+	}
+	bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE) //function overloading for blue ball and 6 balck hole
+	{
+		if (NULL == pDevice)
+			return false;
+
+		m_mtrl.Ambient = color;
+		m_mtrl.Diffuse = color;
+		m_mtrl.Specular = color;
+		m_mtrl.Emissive = d3d::BLACK;
+		m_mtrl.Power = 5.0f;
+
+
+		if (FAILED(D3DXCreateSphere(pDevice, getRadius(), 50, 50, &m_pSphereMesh, NULL)))
+			return false;
+		return true;
+	}
+
     void destroy(void)
     {
         if (m_pSphereMesh != NULL) {
             m_pSphereMesh->Release();
+			d3d::Release<IDirect3DTexture9*>(Texture);
             m_pSphereMesh = NULL;
         }
     }
+	LPD3DXMESH _createMappedSphere(IDirect3DDevice9* pDev)
+	{
+		// create the sphere
+		LPD3DXMESH mesh;
+		if (FAILED(D3DXCreateSphere(pDev, this->getRadius(), 50, 50, &mesh, NULL)))
+			return nullptr;
 
+		// create a copy of the mesh with texture coordinates,
+		// since the D3DX function doesn't include them
+		LPD3DXMESH texMesh;
+		if (FAILED(mesh->CloneMeshFVF(D3DXMESH_SYSTEMMEM, FVF_VERTEX, pDev, &texMesh)))
+			// failed, return un-textured mesh
+			return mesh;
+
+		// finished with the original mesh, release it
+		mesh->Release();
+
+		// lock the vertex buffer
+		//LPVERTEX pVerts;
+		struct _VERTEX* pVerts;
+		if (SUCCEEDED(texMesh->LockVertexBuffer(0, reinterpret_cast<void **>(&pVerts))))
+		{
+			// get vertex count
+			int numVerts = texMesh->GetNumVertices();
+
+			// loop through the vertices
+			for (int i = 0; i < numVerts; i++)
+			{
+				// calculate texture coordinates
+				pVerts->tu = asinf(pVerts->norm.x) / D3DX_PI + 0.5f;
+				pVerts->tv = asinf(pVerts->norm.y) / D3DX_PI + 0.5f;
+
+				// go to next vertex
+				pVerts++;
+			}
+
+			// unlock the vertex buffer
+			texMesh->UnlockVertexBuffer();
+		}
+
+		// return pointer to caller
+		return texMesh;
+	}
     void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
     {
         if (NULL == pDevice)
@@ -161,6 +232,7 @@ public:
         pDevice->SetTransform(D3DTS_WORLD, &mWorld);
         pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
         pDevice->SetMaterial(&m_mtrl);
+		pDevice->SetTexture(0, Texture);
 		m_pSphereMesh->DrawSubset(0);
     }
 	
@@ -768,7 +840,7 @@ bool Setup()
 	// create four balls and set the position
 	for (i=0;i<BALL_COUNT;i++) {
 
-		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
+		if (false == g_sphere[i].create(Device,i,sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
 		g_sphere[i].setPower(0,0);
 		g_sphere[i].ballNum = i;
