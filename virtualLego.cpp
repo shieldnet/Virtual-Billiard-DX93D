@@ -821,7 +821,7 @@ bool Setup()
 																										// Set the font
 	memset(&desc, 0, sizeof(D3DXFONT_DESC));
 	desc.CharSet = HANGUL_CHARSET;
-	strcpy(desc.FaceName, "궁서체");
+	strcpy(desc.FaceName, "Consolas");
 	desc.Height = 20;
 	desc.Width = 10;
 	desc.Weight = FW_NORMAL;
