@@ -291,7 +291,7 @@ public:
 
 			}
 			else {
-				if (this->ballNum != 15 && this->ballNum != 14)
+				if (this->ballNum != 15 && this->ballNum != 14);
 
 
 				else {
