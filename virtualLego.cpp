@@ -475,7 +475,7 @@ class Referee {
 	
 		}
 	
-		bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
+		/*bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
 												//true면 턴 안바뀜 // false면 턴 바뀜
 			if (player == 0) {
 			
@@ -504,7 +504,43 @@ class Referee {
 				
 			}
 			
+		}*/
+
+		bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
+												//true면 턴 안바뀜 // false면 턴 바뀜
+			if (player == 0) {
+
+				if (ballN<7) {
+					player1 = ballN;
+					return true;
+				}
+				else {
+
+					return false;
+
+				}
+
+			}
+			else if (player == 1) {
+
+				if (ballN>=7 && ballN <=13) {
+					player2 = ballN;
+					return true;
+				}
+				else{
+
+					return false;
+
+				}
+
+			}
+
 		}
+
+
+
+
+
 		void holeDetect() { //들어가는 ball 확인해서 맞으면 진행, 틀린 순서면 메세지 박스 띄우고 다른 플레이어로 진행
 			memset(str, 0, 100);
 			bool temp = false;
@@ -1013,7 +1049,7 @@ bool Setup()
 	// create four balls and set the position
 	for (i = 0; i<BALL_COUNT; i++) {
 
-		if (false == g_sphere[i].create(Device, i, sphereColor[i])) return false;
+		if (false == g_sphere[i].create(Device,i, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 		g_sphere[i].ballNum = i;
