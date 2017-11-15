@@ -254,37 +254,7 @@ public:
 
 		return false;
 	}
-	bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
-											//true면 턴 안바뀜 // false면 턴 바뀜
-		if (player == 0) {
-			if (player1 != 6 && ballN == 14) {
-				return false;
-			}
-			if (player1 == 6 && ballN == 14) {
-				return true;
-			}
-			if (player1 == ballN) {
-				player1++;
-				return true;
-			}
-
-		}
-		else if (player == 1) {
-			if (player2 != 13 && ballN == 14) {
-				return false;
-			}
-			if (player2 == 13 && ballN == 14) {
-				return true;
-			}
-
-			if (player2 == ballN + 7) {
-				player2++;
-				return true;
-			}
-
-		}
-		return false;
-	}
+	
 
 	void hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 	{
@@ -321,7 +291,7 @@ public:
 
 			}
 			else {
-				if (this->ballNum != 15 && this->ballNum != 14) this->setPosition(99.99f, this->center_y, 99.99f);
+				if (this->ballNum != 15 && this->ballNum != 14)
 
 
 				else {
@@ -487,187 +457,186 @@ private:
 };
 
 class Referee {
-private:
-	CSphere* sp;
-	CHole* hp;
-	char str[100];
-	int i, j, k;
-
-
-
-public:
-	Referee(CSphere* s, CHole* h) {
-
-		sp = s;
-		hp = h;
-
-
-
-	}
-
-	bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
-											//true면 턴 안바뀜 // false면 턴 바뀜
-		if (player == 0) {
-
-			if (player1 == ballN) {
-				player1++;
-				return true;
-			}
-			else if (player1 != ballN) {
-
-				return false;
-
-			}
-
+	private:
+		CSphere* sp;
+		CHole* hp;
+		char str[100];
+		int i, j, k;
+	
+		
+	
+	public:
+		Referee(CSphere* s, CHole* h) {
+	
+			sp = s;
+			hp = h;
+	
+	
+	
 		}
-		else if (player == 1) {
-
-			if (player2 == ballN + 7) {
-				player2++;
-				return true;
+	
+		bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
+												//true면 턴 안바뀜 // false면 턴 바뀜
+			if (player == 0) {
+			
+				if (player1 == ballN) {
+					player1++;
+					return true;
+				}
+				else if (player1 != ballN) {
+				
+					return false;
+				
+				}
+	
 			}
-			else if (player2 != ballN) {
-
-				return false;
-
+			else if (player == 1) {
+		
+				if (player2 == ballN + 7) {
+					player2++;
+					return true;
+				}
+				else if (player2 != ballN) {
+				
+					return false;
+				
+				}
+				
 			}
-
+			
 		}
-
-	}
-	void holeDetect() { //들어가는 ball 확인해서 맞으면 진행, 틀린 순서면 메세지 박스 띄우고 다른 플레이어로 진행
-		memset(str, 0, 100);
-		bool temp = false;
-		for (i = 0; i < HOLE_COUNT; i++) {
-			for (j = 0; j < BALL_COUNT; j++) {
-				if (sp[j].hasIntersected(hp[i])) {
-
-					if (j != 15 && j != 14) {
-
-						if (isinOrder(j, playermode)) {
-
-							sp[j].setPower(0.0f, 0.0f);
-							sp[j].setPosition(99.99f, M_RADIUS, 99.99f);
-							cout << j << " th ball goalin" << endl;
+		void holeDetect() { //들어가는 ball 확인해서 맞으면 진행, 틀린 순서면 메세지 박스 띄우고 다른 플레이어로 진행
+			memset(str, 0, 100);
+			bool temp = false;
+			for (i = 0; i < HOLE_COUNT; i++) {
+				for (j = 0; j < BALL_COUNT; j++) {
+					if (sp[j].hasIntersected(hp[i])) {
+	
+						if (j != 15 && j!=14) {
+	
+							if (isinOrder(j, playermode)) {
+							
+								sp[j].setPower(0.0f, 0.0f);
+								sp[j].setPosition(99.99f, M_RADIUS, 99.99f);
+								cout << j << " th ball goalin" << endl;
+							}
+							else {
+								cout << j << " th ball goalin" << endl;
+								for (i = 0; i < BALL_COUNT; i++) {
+									sp[i].setPower(0.0f, 0.0f);
+								}
+								sp[j].setPosition(1.0f, M_RADIUS ,1.0f);
+								sprintf(str, "PLAYER %d GOT WRONG BALL", playermode + 1);
+								playermode++;
+								playermode = playermode % 2;
+								MessageBox(nullptr, str, "NEXT PLAYER`S TURN", 0);
+							
+							}
+							
+						
+						}
+						
+					}
+				}
+			
+			}
+		}
+	
+	
+	
+	
+	
+		void isWBinHole() { // 하얀공이 구멍에 들어갔을 때
+			for (int i = 0; i < BALL_COUNT-1; i++) {
+					for (int j = 0; j < 6; j++) {
+						if (sp[15].hasIntersected(hp[j])) {
+							sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
+							sp[15].setPower(0.0f, 0.0f);
+							threeOut++;
+							cout << "goalin" << threeOut << endl;
+	
+							if (threeOut == 3) {
+								playermode++;
+								playermode = playermode % 2;
+								threeOut = 0;
+							}
+	
+						
+					}
+	
+				}
+	
+			}
+		}
+	
+		void isWorthNothing() { // 아무것도 못넣고 하얀공이 멈춘경우. 지금 구현중
+			bool spbool = true, hpbool = true, start = false;
+			if ((abs(sp[15].getVelocity_X()) > 0.1) && (abs(sp[15].getVelocity_Z()) > 0.1)) start = true;
+			
+	
+				//cout << "worth!" << " " << spbool << endl;
+			
+			if (start  && (abs(sp[15].getVelocity_X()) < 0.1) && (abs(sp[15].getVelocity_Z()) < 0.1)) {
+	
+				cout << "you worth nothing" << endl;
+	
+	
+			}
+	
+	
+	
+		}
+		void isEightBallLegit() { // 플레이어가 자신의 모든 공을 다 넣지 않고 8번공을 넣을경우 플레이어가 바뀜
+	
+	
+			for (k = 0; k < HOLE_COUNT; k++) {
+	
+				if (sp[14].hasIntersected(hp[k])) {
+					sp[14].setPower(0.0f, 0.0f);
+					sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
+					if (playermode == PLAYER1) {
+						
+						if (player1 == 6) { 
+							cout << "player1 legit" << endl;
+							MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
+							exit(0);
 						}
 						else {
-							cout << j << " th ball goalin" << endl;
-							for (i = 0; i < BALL_COUNT; i++) {
-								sp[i].setPower(0.0f, 0.0f);
-							}
-							sp[j].setPosition(1.0f, M_RADIUS, 1.0f);
-							sprintf(str, "PLAYER %d GOT WRONG BALL", playermode + 1);
-							playermode++;
-							playermode = playermode % 2;
-							MessageBox(nullptr, str, "NEXT PLAYER`S TURN", 0);
-
+							cout << "player1 not legit" << endl;
+							MessageBox(nullptr, "PLAYER 1 LOSE","GAME OVER", 0);
+							exit(0);
+							if (playermode == PLAYER1) playermode = PLAYER2;
+							break;
 						}
-
-
 					}
-
+					else if (playermode == PLAYER2) {
+						if (player2 == 13) { 
+							cout << "player2 legit" << endl;
+							MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
+							exit(0);
+						
+						}
+						else {
+							cout << "player2 not legit" << endl;
+							MessageBox(nullptr, "PLAYER 2 LOSE", "GAME OVER", 0);
+							exit(0);
+							if (playermode == PLAYER2) playermode = PLAYER1;
+							break;
+						}
+	
+	
+					}
 				}
+	
+	
 			}
-
+	
+	
 		}
-	}
-
-
-
-
-
-	void isWBinHole() { // 하얀공이 구멍에 들어갔을 때
-		for (int i = 0; i < BALL_COUNT - 1; i++) {
-			for (int j = 0; j < 6; j++) {
-				if (sp[15].hasIntersected(hp[j])) {
-					sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
-					sp[15].setPower(0.0f, 0.0f);
-					threeOut++;
-					cout << "goalin" << threeOut << endl;
-
-					if (threeOut == 3) {
-						playermode++;
-						playermode = playermode % 2;
-						threeOut = 0;
-					}
-
-
-				}
-
-			}
-
-		}
-	}
-
-	void isWorthNothing() { // 아무것도 못넣고 하얀공이 멈춘경우. 지금 구현중
-		bool spbool = true, hpbool = true, start = false;
-		if ((abs(sp[15].getVelocity_X()) > 0.1) && (abs(sp[15].getVelocity_Z()) > 0.1)) start = true;
-
-
-		//cout << "worth!" << " " << spbool << endl;
-
-		if (start && (abs(sp[15].getVelocity_X()) < 0.1) && (abs(sp[15].getVelocity_Z()) < 0.1)) {
-
-			cout << "you worth nothing" << endl;
-
-
-		}
-
-
-
-	}
-	void isEightBallLegit() { // 플레이어가 자신의 모든 공을 다 넣지 않고 8번공을 넣을경우 플레이어가 바뀜
-
-
-		for (k = 0; k < HOLE_COUNT; k++) {
-
-			if (sp[14].hasIntersected(hp[k])) {
-				sp[14].setPower(0.0f, 0.0f);
-				sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
-				if (playermode == PLAYER1) {
-
-					if (player1 == 6) {
-						cout << "player1 legit" << endl;
-						MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
-						exit(0);
-					}
-					else {
-						cout << "player1 not legit" << endl;
-						MessageBox(nullptr, "PLAYER 1 LOSE", "GAME OVER", 0);
-						exit(0);
-						if (playermode == PLAYER1) playermode = PLAYER2;
-						break;
-					}
-				}
-				else if (playermode == PLAYER2) {
-					if (player2 == 13) {
-						cout << "player2 legit" << endl;
-						MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
-						exit(0);
-
-					}
-					else {
-						cout << "player2 not legit" << endl;
-						MessageBox(nullptr, "PLAYER 2 LOSE", "GAME OVER", 0);
-						exit(0);
-						if (playermode == PLAYER2) playermode = PLAYER1;
-						break;
-					}
-
-
-				}
-			}
-
-
-		}
-
-
-	}
-
-
-
-
-};
+	
+	
+	};
+	
 
 class CCue {
 	float					m_x;
@@ -1132,54 +1101,47 @@ bool Display(float timeDelta)
 	RECT rect2;
 	char str[100];
 	char str2[100];
+
 	int k = 0;
-
-
-	D3DXMATRIX m;
-
-	float x = 0;
-	float y = 2;
-	float z = 0;
-
-	D3DXMatrixTranslation(&m, x, y, z);
-
-
 	Referee referee(g_sphere, g_hole);
+	
 
 	if (Device)
 	{
+		
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
 
 		SetRect(&rect, 0, 0, 800, 600);
-		SetRect(&rect2, 0, 0, 1024, 768);
+		SetRect(&rect2, 0, 0, 1024,768);
 		ZeroMemory(str, 100);
 		ZeroMemory(str2, 100);
 		// display the font
-		sprintf(str, "Player 1 Current target ball : %d \nPlayer 2 Current target ball :%d\nPLAYER %d TURN", player1 + 1, player2 - 6, playermode + 1);
+		sprintf(str, "Player 1 Current target ball : %d \nPlayer 2 Current target ball :%d\nPLAYER %d TURN", player1 + 1,player2-6,playermode+1);
 		m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
-		// display the font
-		/*if (!playermode)
+	
+	/*
+		if (!playermode)
 
 		{
-			sprintf(str, "Player 1");
-			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
+			sprintf(str, "Player 1 Turn");
+			m_pFont->DrawTextA(NULL, str2, -1, &rect2, DT_RIGHT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
 		}
 		else
 		{
-			sprintf(str, "Player 2");
-			m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
+			sprintf(str, "Player 2 Turn");
+			m_pFont->DrawTextA(NULL, str2, -1, &rect2, DT_RIGHT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
 		}
-
+		*/
 		// update the font
-		if (tempState == false)
+	/*	if (tempState == false)
 		{
 			playermode++;
 			playermode = playermode % 2;
 			threeOut = 0;
 			tempState = true;
-		}
-		*/
+		}*/
+
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < BALL_COUNT; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
@@ -1189,7 +1151,6 @@ bool Display(float timeDelta)
 		for (i = 0; i < HOLE_COUNT; i++) {
 			g_hole[i].ballUpdate(timeDelta);
 
-			for (j = 0; j < HOLE_COUNT; j++) { g_legowall[i].hitBy(g_hole[j]); }
 		}
 
 		// check whether any two balls hit together and update the direction of balls
@@ -1198,18 +1159,17 @@ bool Display(float timeDelta)
 				if (i >= j) { continue; }
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
-			for (k = 0; k < HOLE_COUNT; k++) {
-				if (i >= j) { continue; }
-				g_sphere[i].hitBy(g_hole[k]);
-
-			}
+			
 		}
-		referee.isWBinHole();
-		//referee.isWorthNothing();
-		referee.isEightBallLegit();
+		for (i = 0; i < BALL_COUNT; i++) {
+			for (j = 0; j < HOLE_COUNT; j++) {
+				//if (i >= j) { continue; }
+				g_sphere[i].hitBy(g_hole[j]);
+			}
+			
+		}
 
-		//Draw cue
-		g_cue.draw(Device, g_mWorld);
+		
 
 		// draw plane, walls, and spheres
 		g_legoPlane.draw(Device, g_mWorld);
