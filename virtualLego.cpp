@@ -646,7 +646,7 @@ class Referee {
 						}
 					}
 					else if (playermode == PLAYER2) {
-						if (player2 == 6) { 
+						if (player2 == 13) { 
 							cout << "player2 legit" << endl;
 							MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
 							exit(0);
