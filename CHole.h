@@ -23,7 +23,7 @@ private:
 	float                   m_unit;
 	float					m_dx;
 	float					m_dz;
-	bool					isHole;
+	
 public:
 
 	//bool					isHole;

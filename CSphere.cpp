@@ -3,6 +3,7 @@
 #include <d3d10.h>
 #include <D3DX10.h>
 
+
 using namespace std;
 
 bool isHole;
@@ -183,6 +184,7 @@ void CSphere::hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 		else {
 			if (this->ballNum != 15 && this->ballNum != 14);
 			else {
+				
 				/*this->setPosition(0.0f, this->center_y, 0.0f);
 				this->m_velocity_x = 0;
 				this->m_velocity_z = 0;*/

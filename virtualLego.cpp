@@ -158,7 +158,7 @@ public:
 						}
 						else {
 							cout << j << " th ball goalin" << endl;
-							/*							for (i = 0; i < BALL_COUNT; i++) {
+													/*for (i = 0; i < BALL_COUNT; i++) {
 							sp[i].setPower(0.0f, 0.0f);
 							}*/
 							//sp[j].setPosition(1.0f, M_RADIUS ,1.0f);
@@ -299,7 +299,7 @@ bool Setup()
 	// create four balls and set the position
 	for (i = 0; i<BALL_COUNT; i++) {
 
-		if (false == g_sphere[i].create(Device,i, sphereColor[i])) return false;
+		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 		g_sphere[i].ballNum = i;
@@ -309,6 +309,7 @@ bool Setup()
 		if (false == g_hole[i].create(Device, holeColor[i])) return false;
 		g_hole[i].setCenter(holePos[i][0], (float)M_RADIUS, holePos[i][1]);
 		g_hole[i].setPower(0, 0);
+		g_hole[i].isHole = true;
 	}
 
 	// create blue ball for set direction
@@ -456,7 +457,7 @@ bool Display(float timeDelta)
 			
 		}
 
-		g_cue.draw(Device, g_mWorld);
+		g_cue.draw(Device, g_mWorld,Device);
 
 		// draw plane, walls, and spheres
 

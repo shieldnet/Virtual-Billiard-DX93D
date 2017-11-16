@@ -1,7 +1,7 @@
 #ifndef _CSPHERE_
 #define _CSPHERE_
 #include "d3dUtility.h"
-
+#include <iostream>
 #include "CObject.h"
 
 
