@@ -18,6 +18,8 @@
 #include <cstdio>
 #include <iostream>
 #include <cassert>
+#include <float.h>
+#include <math.h>
 
 #include "CObject.h"
 #include "CWall.h"
@@ -27,6 +29,8 @@
 #include "CCUe.h"
 
 enum { PLAYER1, PLAYER2 };
+enum { NOTHING, SOMETHING };
+enum { NO, YES };
 
 using namespace std;
 
@@ -52,6 +56,8 @@ int threeOut = 0;
 bool eigthball = false;
 bool tempState = true;
 
+int space_pressed = NO;	// space가 눌렸는지에 대한 상태를 갖는 변수
+int check = NOTHING;	// Referee가 정의한 모든 경우에 있어서 상황을 체크하는 변수
 
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
@@ -154,9 +160,11 @@ public:
 						if (isinOrder(j, playermode)) {
 							sp[j].setPower(0.0f, 0.0f);
 							sp[j].setPosition(99.99f, M_RADIUS, 99.99f);
+							check = SOMETHING;
 							cout << j << " th ball goalin" << endl;
 						}
 						else {
+							check = SOMETHING;
 							cout << j << " th ball goalin" << endl;
 													/*for (i = 0; i < BALL_COUNT; i++) {
 							sp[i].setPower(0.0f, 0.0f);
@@ -181,6 +189,7 @@ public:
 					sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
 					sp[15].setPower(0.0f, 0.0f);
 					threeOut++;
+					check = SOMETHING;
 					cout << "goalin" << threeOut << endl;
 
 					if (threeOut == 3) {
@@ -193,16 +202,35 @@ public:
 		}
 	}
 
-	void isWorthNothing() { // 아무것도 못넣고 하얀공이 멈춘경우. 지금 구현중
-		bool spbool = true, hpbool = true, start = false;
-		if ((abs(sp[15].getVelocity_X()) > 0.1) && (abs(sp[15].getVelocity_Z()) > 0.1)) start = true;
-		//cout << "worth!" << " " << spbool << endl;
-
-		if (start && (abs(sp[15].getVelocity_X()) < 0.1) && (abs(sp[15].getVelocity_Z()) < 0.1)) {
-
-			cout << "you worth nothing" << endl;
+	void isWorthNothing() { // 아무것도 못 넣고 하얀공이 멈춘 경우
+		if (check == NOTHING)
+		{
+			playermode++;
+			playermode = playermode % 2;
 		}
+		space_pressed = NO;
+		check = NOTHING;
 	}
+
+	bool checkStop() {	// 모든 공이 멈추었을 때 true 반환
+		float vx;
+		float vz;
+	
+		if (space_pressed == NO)
+			return false;
+
+		for (int i = 0; i < BALL_COUNT; i++)
+		{
+			vx = sp[i].getVelocity_X();
+			vz = sp[i].getVelocity_Z();
+
+			if (fabsf(vx-0.0f) > FLT_EPSILON || fabsf(vz-0.0f) > FLT_EPSILON)
+				return false;
+		}
+
+		return true;
+	}
+
 	void isEightBallLegit() { // 플레이어가 자신의 모든 공을 다 넣지 않고 8번공을 넣을경우 플레이어가 바뀜
 		for (k = 0; k < HOLE_COUNT; k++) {
 			if (sp[14].hasIntersected(hp[k])) {
@@ -299,7 +327,7 @@ bool Setup()
 	// create four balls and set the position
 	for (i = 0; i<BALL_COUNT; i++) {
 
-		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
+		if (false == g_sphere[i].create(Device, i, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 		g_sphere[i].ballNum = i;
@@ -481,9 +509,9 @@ bool Display(float timeDelta)
 	}
 	referee.holeDetect();
 	referee.isWBinHole();
-	//referee.isWorthNothing();
+	if(referee.checkStop())
+		referee.isWorthNothing();
 	referee.isEightBallLegit();
-
 	return true;
 }
 
@@ -518,6 +546,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 			D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 			D3DXVECTOR3	whitepos = g_sphere[15].getCenter();
+			
 			double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
 				pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
 			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
@@ -525,7 +554,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
 			double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
 			g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
-
+			space_pressed = YES;
 			break;
 
 		}
