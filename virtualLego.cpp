@@ -56,9 +56,9 @@ struct _VERTEX
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
 
-//0~6번까지는 plyaer1 ball, 7~13~ player 2 ball 14는 blackball 15는 흰공 //배열 위치만 기억 --> 배치는 섞음
+//0~6번까지는 plyaer1 ball, 7~13~ player 2 ball 14는 blackball 15는 흰공 //배열 위치만 기억 --> 배치는 섞음//2.3f,0,0f,-3.0f,0,0f
 
-const float spherePos[BALL_COUNT][2] = { { 1.5f,0.0f },{ 1.9f,0.25f },{ 1.9f,-0.25f },{ 2.3f,0.45f },{ 2.3f,0.0f },{ 2.3f,-0.45f },{ 2.7f,0.8f },{ 2.7f,0.3f },{ 2.7f,-0.3f },{ 2.7f,-0.8f },{ 3.1f, 0.95f },{ 3.1f,0.45f },{ 3.1f,0.0f },{ 3.1f,-0.45f },{ 3.1f,-0.95f },{ -3.0f,0.0f } };
+const float spherePos[BALL_COUNT][2] = { { 1.5f,0.0f },{ 1.9f,0.25f },{ 1.9f,-0.25f },{ 2.3f,0.45f },{ 3.1f,-0.95f },{ 2.3f,-0.45f },{ 2.7f,0.8f },{ 2.7f,0.3f },{ 2.7f,-0.3f },{ 2.7f,-0.8f },{ 3.1f, 0.95f },{ 3.1f,0.45f },{ 3.1f,0.0f },{ 3.1f,-0.45f },{ 2.3f,0.0f },{ -3.0f,0.0f } };
 
 const float holePos[HOLE_COUNT][2] = { { 4.2f,2.7f } ,{ 0.2f,2.7f } ,{ -4.2f,2.7f } ,{ 4.2f,-2.7f } ,{ 0.2f,-2.7f } ,{ -4.2f,-2.7f } };
 // initialize the color of each ball (ball[0] ~ ball[BALL_COUNT])
@@ -558,14 +558,14 @@ class Referee {
 							}
 							else {
 								cout << j << " th ball goalin" << endl;
-								for (i = 0; i < BALL_COUNT; i++) {
+	/*							for (i = 0; i < BALL_COUNT; i++) {
 									sp[i].setPower(0.0f, 0.0f);
-								}
-								sp[j].setPosition(1.0f, M_RADIUS ,1.0f);
-								sprintf(str, "PLAYER %d GOT WRONG BALL", playermode + 1);
+								}*/
+								//sp[j].setPosition(1.0f, M_RADIUS ,1.0f);
+								//sprintf(str, "PLAYER %d GOT WRONG BALL", playermode + 1);
 								playermode++;
 								playermode = playermode % 2;
-								MessageBox(nullptr, str, "NEXT PLAYER`S TURN", 0);
+								//MessageBox(nullptr, str, "NEXT PLAYER`S TURN", 0);
 							
 							}
 							
