@@ -138,7 +138,7 @@ public:
 			ball.setPosition(ball.pre_center_x, ball_cord.y, ball.pre_center_z);
 		}
 	}
-	bool create(IDirect3DDevice9* pDevice, int num, D3DXCOLOR color = d3d::WHITE)
+	/*bool create(IDirect3DDevice9* pDevice, int num, D3DXCOLOR color = d3d::WHITE)
 	{
 		if (NULL == pDevice)
 			return false;
@@ -158,7 +158,7 @@ public:
 		}
 		return true;
 
-	}
+	}*/
 
 	bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE) //function overloading for blue ball and 6 balck hole
 	{
@@ -511,7 +511,7 @@ class Referee {
 			if (player == 0) {
 
 				if (ballN<7) {
-					player1 = ballN;
+					player1++;
 					return true;
 				}
 				else {
@@ -524,7 +524,7 @@ class Referee {
 			else if (player == 1) {
 
 				if (ballN>=7 && ballN <=13) {
-					player2 = ballN;
+					player2++;
 					return true;
 				}
 				else{
@@ -646,7 +646,7 @@ class Referee {
 						}
 					}
 					else if (playermode == PLAYER2) {
-						if (player2 == 13) { 
+						if (player2 == 6) { 
 							cout << "player2 legit" << endl;
 							MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
 							exit(0);
@@ -1049,7 +1049,7 @@ bool Setup()
 	// create four balls and set the position
 	for (i = 0; i<BALL_COUNT; i++) {
 
-		if (false == g_sphere[i].create(Device,i, sphereColor[i])) return false;
+		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 		g_sphere[i].ballNum = i;
@@ -1153,7 +1153,7 @@ bool Display(float timeDelta)
 		ZeroMemory(str, 100);
 		ZeroMemory(str2, 100);
 		// display the font
-		sprintf(str, "Player 1 Current target ball : %d \nPlayer 2 Current target ball :%d\nPLAYER %d TURN", player1 + 1,player2-6,playermode+1);
+		sprintf(str, "Player 1 Points : %d \nPlayer 2 Points :%d\nPLAYER %d TURN", player1,player2-7,playermode+1);
 		m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
 	
 	/*
