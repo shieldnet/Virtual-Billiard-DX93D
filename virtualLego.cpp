@@ -138,7 +138,7 @@ public:
 			ball.setPosition(ball.pre_center_x, ball_cord.y, ball.pre_center_z);
 		}
 	}
-	/*bool create(IDirect3DDevice9* pDevice, int num, D3DXCOLOR color = d3d::WHITE)
+	bool create(IDirect3DDevice9* pDevice, int num, D3DXCOLOR color = d3d::WHITE)
 	{
 		if (NULL == pDevice)
 			return false;
@@ -158,7 +158,7 @@ public:
 		}
 		return true;
 
-	}*/
+	}
 
 	bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE) //function overloading for blue ball and 6 balck hole
 	{
@@ -1049,7 +1049,7 @@ bool Setup()
 	// create four balls and set the position
 	for (i = 0; i<BALL_COUNT; i++) {
 
-		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
+		if (false == g_sphere[i].create(Device,i, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS, spherePos[i][1]);
 		g_sphere[i].setPower(0, 0);
 		g_sphere[i].ballNum = i;
