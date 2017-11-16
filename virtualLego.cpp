@@ -486,7 +486,7 @@ bool Display(float timeDelta)
 			
 		}
 
-		g_cue.draw(Device, g_mWorld,Device);
+		g_cue.draw(Device, g_mWorld);
 
 		// draw plane, walls, and spheres
 
