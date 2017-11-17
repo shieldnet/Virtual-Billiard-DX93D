@@ -188,15 +188,10 @@ public:
 				if (sp[15].hasIntersected(hp[j])) {
 					sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
 					sp[15].setPower(0.0f, 0.0f);
-					threeOut++;
 					check = SOMETHING;
 					cout << "goalin" << threeOut << endl;
-
-					if (threeOut == 3) {
-						playermode++;
-						playermode = playermode % 2;
-						threeOut = 0;
-					}
+					playermode++;
+					playermode = playermode % 2;
 				}
 			}
 		}
