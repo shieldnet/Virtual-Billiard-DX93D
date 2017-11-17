@@ -486,7 +486,7 @@ bool Display(float timeDelta)
 			
 		}
 
-		g_cue.draw(Device, g_mWorld);
+		g_cue.draw(Device, g_mWorld, Device);
 
 		// draw plane, walls, and spheres
 
@@ -545,17 +545,20 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 		case VK_SPACE:
 
-			D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
-			D3DXVECTOR3	whitepos = g_sphere[15].getCenter();
-			
-			double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
-				pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
-			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
-			if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
-			if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
-			double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
-			g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
-			space_pressed = YES;
+			if (space_pressed == NO)
+			{
+				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
+				D3DXVECTOR3	whitepos = g_sphere[15].getCenter();
+
+				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
+					pow(targetpos.z - whitepos.z, 2)));		// 기본 1 사분면
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x >= 0) { theta = -theta; }	//4 사분면
+				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
+				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
+				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
+				g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
+				space_pressed = YES;
+			}
 			break;
 
 		}
