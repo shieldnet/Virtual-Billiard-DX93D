@@ -58,6 +58,7 @@ bool tempState = true;
 
 int space_pressed = NO;	// space가 눌렸는지에 대한 상태를 갖는 변수
 int check = NOTHING;	// Referee가 정의한 모든 경우에 있어서 상황을 체크하는 변수
+bool isWhiteBallInHole = false;
 
 // There are BALL_COUNT balls
 // initialize the position (coordinate) of each ball (ball[0] ~ ball[BALL_COUNT])
@@ -186,12 +187,13 @@ public:
 		for (int i = 0; i < BALL_COUNT - 1; i++) {
 			for (int j = 0; j < 6; j++) {
 				if (sp[15].hasIntersected(hp[j])) {
-					sp[15].setPosition(0.0f, M_RADIUS, 0.0f);
+					sp[15].setPosition(0.0f,0.0f ,0.0f);
 					sp[15].setPower(0.0f, 0.0f);
 					check = SOMETHING;
 					cout << "goalin" << threeOut << endl;
 					playermode++;
 					playermode = playermode % 2;
+					isWhiteBallInHole = true;
 				}
 			}
 		}
@@ -210,7 +212,6 @@ public:
 	bool checkStop() {	// 모든 공이 멈추었을 때 true 반환
 		float vx;
 		float vz;
-	
 		if (space_pressed == NO)
 			return false;
 
@@ -347,7 +348,7 @@ bool Setup()
 	lit.Diffuse = d3d::WHITE;
 	lit.Specular = d3d::WHITE * 0.9f;
 	lit.Ambient = d3d::WHITE * 0.9f;
-	lit.Position = D3DXVECTOR3(0.0f, 3.0f, 0.0f);
+	lit.Position = D3DXVECTOR3(0.0f, 2.0f, 0.0f);
 	lit.Range = 100.0f;
 	lit.Attenuation0 = 0.0f;
 	lit.Attenuation1 = 0.9f;
@@ -357,7 +358,7 @@ bool Setup()
 		return false;
 
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(0.0f, 5.0f, -8.0f);
+	D3DXVECTOR3 pos(0.0f, 10.0f, -0.1f);
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
@@ -423,8 +424,8 @@ bool Display(float timeDelta)
 		
 		Device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00afafaf, 1.0f, 0);
 		Device->BeginScene();
-
-		SetRect(&rect, 0, 0, 800, 600);
+		//1000,1000
+		SetRect(&rect, 0, 0, 800, 1000);
 		SetRect(&rect2, 0, 0, 1024,768);
 		ZeroMemory(str, 100);
 		ZeroMemory(str2, 100);
@@ -508,6 +509,7 @@ bool Display(float timeDelta)
 	if(referee.checkStop())
 		referee.isWorthNothing();
 	referee.isEightBallLegit();
+	
 	return true;
 }
 
@@ -552,6 +554,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0) { theta = PI + theta; } // 3 사분면
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
 				g_sphere[15].setPower(distance * cos(theta), distance * sin(theta));
+				isWhiteBallInHole = false;
 				space_pressed = YES;
 			}
 			break;
@@ -569,30 +572,44 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		if (LOWORD(wParam) & MK_RBUTTON) {
 
-			if (isReset) {
-				isReset = false;
+			//if (isReset) {
+			//	isReset = false;
+			//}
+			//else {
+			//	D3DXVECTOR3 vDist;
+			//	D3DXVECTOR3 vTrans;
+			//	D3DXMATRIX mTrans;
+			//	D3DXMATRIX mX;
+			//	D3DXMATRIX mY;
+
+			//	switch (move) {
+			//	case WORLD_MOVE:
+			//		dx = (old_x - new_x) * 0.01f;
+			//		dy = (old_y - new_y) * 0.01f;
+			//		D3DXMatrixRotationY(&mX, dx);
+			//		D3DXMatrixRotationX(&mY, dy);
+			//		g_mWorld = g_mWorld * mX * mY;
+
+			//		break;
+			//	}
+			//}
+
+			//old_x = new_x;
+			//old_y = new_y;
+			if (isWhiteBallInHole) {
+				dx = (old_x - new_x);// * 0.01f;
+				dy = (old_y - new_y);// * 0.01f;
+
+				
+				D3DXVECTOR3 coord3d = g_sphere[15].getCenter();
+				g_sphere[15].setPosition(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
+
+				old_x = new_x;
+				old_y = new_y;
+
+				move = WORLD_MOVE;
+
 			}
-			else {
-				D3DXVECTOR3 vDist;
-				D3DXVECTOR3 vTrans;
-				D3DXMATRIX mTrans;
-				D3DXMATRIX mX;
-				D3DXMATRIX mY;
-
-				switch (move) {
-				case WORLD_MOVE:
-					dx = (old_x - new_x) * 0.01f;
-					dy = (old_y - new_y) * 0.01f;
-					D3DXMatrixRotationY(&mX, dx);
-					D3DXMatrixRotationX(&mY, dy);
-					g_mWorld = g_mWorld * mX * mY;
-
-					break;
-				}
-			}
-
-			old_x = new_x;
-			old_y = new_y;
 
 		}
 		else {
