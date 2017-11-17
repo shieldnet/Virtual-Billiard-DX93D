@@ -308,7 +308,7 @@ bool Setup()
 
 	//Create Cue
 	if (false == g_cue.create(Device, 1, -1, 9, 0.5f, 0.12, d3d::WHITE)) return false;
-	g_cue.setPosition(0.0f, 1.0f, 0.0f);
+	g_cue.setPosition(6.0f, 0.0f, 0.0f);
 
 	// create plane and set the position
 	if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
@@ -486,7 +486,7 @@ bool Display(float timeDelta)
 			
 		}
 
-		g_cue.draw(Device, g_mWorld, Device);
+		g_cue.draw(Device, g_mWorld);
 
 		// draw plane, walls, and spheres
 

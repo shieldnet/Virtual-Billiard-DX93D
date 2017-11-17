@@ -39,9 +39,9 @@ void CCue::destroy(void)
 	}
 }
 
-void CCue::draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld, LPDIRECT3DDEVICE9& Device )
+void CCue::draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
 {
-	D3DXLoadMeshFromX("./image/cuew.x", D3DXMESH_MANAGED, Device, NULL, &pMaterialBuffer, NULL, &m_numMaterials, &m_pBoundMesh);
+	D3DXLoadMeshFromX("./image/cuew.x", D3DXMESH_MANAGED, pDevice, NULL, &pMaterialBuffer, NULL, &m_numMaterials, &m_pBoundMesh);
 
 	D3DXMATERIAL* tempMaterials = (D3DXMATERIAL*)pMaterialBuffer->GetBufferPointer();
 	D3DMATERIAL9* material = new D3DMATERIAL9[m_numMaterials];

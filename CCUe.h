@@ -20,7 +20,7 @@ public:
 
 	void destroy(void);
 
-	void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld, LPDIRECT3DDEVICE9& Device);
+	void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld);
 
 	void setPosition(float x, float y, float z);
 
