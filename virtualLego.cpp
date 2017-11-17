@@ -237,7 +237,7 @@ public:
 				sp[14].setPower(0.0f, 0.0f);
 				sp[14].setPosition(99.99f, M_RADIUS, 99.99f);
 				if (playermode == PLAYER1) {
-					if (player1 == 6) {
+					if (player1 == 7) {
 						cout << "player1 legit" << endl;
 						MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
 						exit(0);
@@ -251,7 +251,7 @@ public:
 					}
 				}
 				else if (playermode == PLAYER2) {
-					if (player2 == 13) {
+					if (player2 == 14) {
 						cout << "player2 legit" << endl;
 						MessageBox(nullptr, "PLAYER 1 WIN", "GAME WIN", 0);
 						exit(0);
