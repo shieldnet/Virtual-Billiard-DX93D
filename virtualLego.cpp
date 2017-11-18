@@ -98,36 +98,7 @@ public:
 		hp = h;
 	}
 
-	/*bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
-	//true면 턴 안바뀜 // false면 턴 바뀜
-	if (player == 0) {
 
-	if (player1 == ballN) {
-	player1++;
-	return true;
-	}
-	else if (player1 != ballN) {
-
-	return false;
-
-	}
-
-	}
-	else if (player == 1) {
-
-	if (player2 == ballN + 7) {
-	player2++;
-	return true;
-	}
-	else if (player2 != ballN) {
-
-	return false;
-
-	}
-
-	}
-
-	}*/
 
 	bool isinOrder(int ballN, int player) { //plyaer 1의 공이 0~6까지 //player2가 7~~13까지 // 14는 black ball이고 15은 white ball
 											//true면 턴 안바뀜 // false면 턴 바뀜
@@ -359,9 +330,9 @@ bool Setup()
 
 
 	//Create Cue
-	if (false == g_cue.create(Device, 1, -1, 5, 0.1f, 0.1f, d3d::BLACK)) return false;
+	/*if (false == g_cue.create(Device, 1, -1, 5, 0.1f, 0.1f, d3d::BLACK)) return false;
 	g_cue.setPosition(white.x-unitvec.x*3, (float)M_RADIUS*4, white.z-unitvec.z*3);
-
+*/
 
 
 	// light setting 
@@ -499,7 +470,7 @@ bool Display(float timeDelta)
 		}
 
 		g_target_blueball.draw(Device, g_mWorld);
-		g_cue.draw(Device, g_mWorld);
+		//g_cue.draw(Device, g_mWorld);
 		g_light.draw(Device);
 
 		//g_cue.rotate(Device, g_mWorld);
