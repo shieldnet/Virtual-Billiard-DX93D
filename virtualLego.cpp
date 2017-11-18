@@ -551,8 +551,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				{
 					D3DXVECTOR3 white = g_sphere[15].getPosition();
 					D3DXVECTOR3 blue = g_target_blueball.getPosition();
+					D3DXVECTOR3 vec = blue - white;
+					D3DXVECTOR3 high(0.0f, 2.0f, 0.0f);
 
-					D3DXVECTOR3 pos(white);
+					D3DXVECTOR3 pos(white + high - vec);
 					D3DXVECTOR3 target(blue);
 					D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 					D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
