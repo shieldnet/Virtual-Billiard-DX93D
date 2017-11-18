@@ -55,6 +55,7 @@ int threeOut = 0;
 //bool player[16] = { false, };
 bool eigthball = false;
 bool tempState = true;
+bool CameraViewChanged = false;
 
 int space_pressed = NO;	// space가 눌렸는지에 대한 상태를 갖는 변수
 int check = NOTHING;	// Referee가 정의한 모든 경우에 있어서 상황을 체크하는 변수
@@ -538,6 +539,36 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				wire = !wire;
 				Device->SetRenderState(D3DRS_FILLMODE,
 					(wire ? D3DFILL_WIREFRAME : D3DFILL_SOLID));
+			}
+			break;
+
+		case VK_TAB:
+			cout << "Camera View chagned" << endl;
+			//VK_TAB 함수 
+		
+			if (CameraViewChanged == false)
+			{
+				{
+					D3DXVECTOR3 white = g_sphere[15].getPosition();
+					D3DXVECTOR3 blue = g_target_blueball.getPosition();
+
+					D3DXVECTOR3 pos(white);
+					D3DXVECTOR3 target(blue);
+					D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
+					D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+					Device->SetTransform(D3DTS_VIEW, &g_mView);
+					CameraViewChanged = true;
+				}
+			}
+			else {
+				{
+					D3DXVECTOR3 pos(0.0f, 10.0f, -0.1f);
+					D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
+					D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
+					D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
+					Device->SetTransform(D3DTS_VIEW, &g_mView);
+					CameraViewChanged = false;
+				}
 			}
 			break;
 		case VK_SPACE:
