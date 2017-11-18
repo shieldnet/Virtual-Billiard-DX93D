@@ -52,7 +52,7 @@ bool CSphere::create(IDirect3DDevice9* pDevice, int num, D3DXCOLOR color = d3d::
 	m_mtrl.Emissive = d3d::BLACK;
 	m_mtrl.Power = 5.0f;
 
-	string filePath = "./image/" + to_string(num + 1) + ".jpg";
+	string filePath = "./image/" + to_string(num + 1) + ".png";
 
 	this->m_pSphereMesh = _createMappedSphere(pDevice);
 		if (FAILED(D3DXCreateTextureFromFile(pDevice, filePath.c_str(), &Texture)))
