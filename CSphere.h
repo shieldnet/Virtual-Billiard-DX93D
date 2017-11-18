@@ -60,7 +60,7 @@ public:
 
 	void hitBy(CSphere& ball) noexcept;
 
-	void ballUpdate(float timeDiff);
+	void ballUpdate(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld, float timeDiff);
 
 	double getVelocity_X();
 	double getVelocity_Z();

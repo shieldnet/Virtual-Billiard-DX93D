@@ -1,4 +1,7 @@
 #include "CCUe.h"
+#include <iostream>
+
+using namespace std;
 
 CCue::CCue(void)	// 큐 생성자
 {
@@ -28,6 +31,7 @@ bool CCue::create(IDirect3DDevice9* pDevice, float ix, float iz, float iwidth, f
 
 	if (FAILED(D3DXCreateBox(pDevice, iwidth, iheight, idepth, &m_pBoundMesh, NULL)))
 		return false;
+	cout << "Cue created" << endl;
 	return true;
 }
 
@@ -39,31 +43,44 @@ void CCue::destroy(void)
 	}
 }
 
+float CCue::getWidth() const {
+
+	return this->m_width;
+}
+
+
 void CCue::draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
 {
-	D3DXLoadMeshFromX("./image/cuew.x", D3DXMESH_MANAGED, pDevice, NULL, &pMaterialBuffer, NULL, &m_numMaterials, &m_pBoundMesh);
 
-	D3DXMATERIAL* tempMaterials = (D3DXMATERIAL*)pMaterialBuffer->GetBufferPointer();
-	D3DMATERIAL9* material = new D3DMATERIAL9[m_numMaterials];
-	LPDIRECT3DTEXTURE9* texture = new LPDIRECT3DTEXTURE9[m_numMaterials];
-	for (DWORD i = 0; i < m_numMaterials; i++)    // for each material...
-	{
-		material[i] = tempMaterials[i].MatD3D;    // get the material info
-		material[i].Ambient = material[i].Diffuse;   // make ambient the same as diffuse
-		D3DXCreateTextureFromFile(pDevice,
-			"./image/cuew.x",
-			&texture[i]);
-		//texture[i] = NULL;
-	}
-
+	
 	if (NULL == pDevice)
 		return;
-	for (int i = 0; i < m_numMaterials; i++) {
-		pDevice->SetTransform(D3DTS_WORLD, &mWorld);
-		pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
-		pDevice->SetMaterial(&m_mtrl);
-		m_pBoundMesh->DrawSubset(i);
-	}
+	pDevice->SetTransform(D3DTS_WORLD, &mWorld);
+	pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
+	pDevice->SetMaterial(&m_mtrl);
+	m_pBoundMesh->DrawSubset(0);
+
+}
+
+void CCue::rotate(IDirect3DDevice9* pDevice, D3DXMATRIX& mWorld) {
+	
+
+	
+	D3DXMATRIX mX;
+	D3DXMATRIX mY;
+
+	float dx = 0.1f;
+	D3DXMatrixRotationY(&mX, dx);
+
+	mWorld = mX;
+
+	pDevice->SetTransform(D3DTS_WORLD, &mWorld);
+	/*D3DXMatrixRotationY(&mX, dx);
+	D3DXMatrixRotationX(&mY, dy);
+*/
+
+
+
 }
 
 void CCue::setPosition(float x, float y, float z)
@@ -73,6 +90,11 @@ void CCue::setPosition(float x, float y, float z)
 	this->m_z = z;
 	D3DXMatrixTranslation(&m, x, y, z);
 	setLocalTransform(m);
+}
+D3DXVECTOR3 CCue::getCenter(void) const
+{
+	D3DXVECTOR3 org(this->center_x, this->center_y, this->center_z);
+	return org;
 }
 
 float CCue::getHeight(void) const { 

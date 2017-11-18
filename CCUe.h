@@ -22,9 +22,15 @@ public:
 
 	void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld);
 
+	void rotate(IDirect3DDevice9* pDevice, D3DXMATRIX& mWorld);
+
 	void setPosition(float x, float y, float z);
 
+	D3DXVECTOR3 getCenter(void) const;
+
 	float getHeight(void) const;
+
+	float getWidth(void) const;
 
 
 private:

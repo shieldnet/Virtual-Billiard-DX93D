@@ -70,7 +70,7 @@ const float spherePos[BALL_COUNT][2] = { { 1.5f,0.0f },{ 1.9f,0.25f },{ 1.9f,-0.
 
 const float holePos[HOLE_COUNT][2] = { { 4.2f,2.7f } ,{ 0.2f,2.7f } ,{ -4.2f,2.7f } ,{ 4.2f,-2.7f } ,{ 0.2f,-2.7f } ,{ -4.2f,-2.7f } };
 // initialize the color of each ball (ball[0] ~ ball[BALL_COUNT])
-const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::MAGENTA,d3d::BLACK,d3d::WHITE };
+const D3DXCOLOR sphereColor[BALL_COUNT] = { d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::MAGENTA, d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::YELLOW,d3d::BLACK,d3d::WHITE };
 const D3DXCOLOR holeColor[HOLE_COUNT] = { d3d::BLACK,d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK, d3d::BLACK };
 
 // -----------------------------------------------------------------------------
@@ -283,6 +283,18 @@ CCue	g_cue;
 double g_camera_pos[3] = { 0.0, 7.0, -8.0 };
 
 // -----------------------------------------------------------------------------
+// Global Vectort for positioning WhiteBall to BlueBall
+// -----------------------------------------------------------------------------
+
+
+D3DXVECTOR3 white;
+D3DXVECTOR3 blue;
+D3DXVECTOR3 vec = (blue - white);
+double sizevec;
+D3DXVECTOR3 unitvec = vec/sizevec;
+
+
+// -----------------------------------------------------------------------------
 // Functions
 // -----------------------------------------------------------------------------
 
@@ -303,10 +315,6 @@ bool Setup()
 	D3DXMatrixIdentity(&g_mView);
 	D3DXMatrixIdentity(&g_mProj);
 
-	//Create Cue
-	if (false == g_cue.create(Device, 1, -1, 9, 0.5f, 0.12, d3d::WHITE)) return false;
-	g_cue.setPosition(6.0f, 0.0f, 0.0f);
-
 	// create plane and set the position
 	if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
 	g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
@@ -321,7 +329,7 @@ bool Setup()
 	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
 	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
 
-	// create four balls and set the position
+	// create four balls and set the position // if memory leaked, deactivate parameter i of create();
 	for (i = 0; i<BALL_COUNT; i++) {
 
 		if (false == g_sphere[i].create(Device,i, sphereColor[i])) return false;
@@ -340,7 +348,21 @@ bool Setup()
 
 	// create blue ball for set direction
 	if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS, .0f);
+	g_target_blueball.setCenter(0.0f, (float)M_RADIUS, 0.0f);
+
+
+	white = g_sphere[15].getPosition();
+	blue = g_target_blueball.getPosition();
+	vec = (blue - white);
+	sizevec = sqrt((vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z));
+	unitvec = vec / sizevec;
+
+
+	//Create Cue
+	if (false == g_cue.create(Device, 1, -1, 5, 0.1f, 0.1f, d3d::BLACK)) return false;
+	g_cue.setPosition(white.x-unitvec.x*3, (float)M_RADIUS*4, white.z-unitvec.z*3);
+
+
 
 	// light setting 
 	D3DLIGHT9 lit;
@@ -418,7 +440,7 @@ bool Display(float timeDelta)
 
 	int k = 0;
 	Referee referee(g_sphere, g_hole);
-	
+
 
 	if (Device)
 	{
@@ -433,37 +455,15 @@ bool Display(float timeDelta)
 		// display the font
 		sprintf(str, "Player 1 Points : %d \nPlayer 2 Points :%d\nPLAYER %d TURN", player1,player2-7,playermode+1);
 		m_pFont->DrawTextA(NULL, str, -1, &rect, DT_LEFT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
-	
-	/*
-		if (!playermode)
-
-		{
-			sprintf(str, "Player 1 Turn");
-			m_pFont->DrawTextA(NULL, str2, -1, &rect2, DT_RIGHT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
-		}
-		else
-		{
-			sprintf(str, "Player 2 Turn");
-			m_pFont->DrawTextA(NULL, str2, -1, &rect2, DT_RIGHT, D3DCOLOR_ARGB(0xff, 0xff, 0xff, 0xff));
-		}
-		*/
-		// update the font
-	/*	if (tempState == false)
-		{
-			playermode++;
-			playermode = playermode % 2;
-			threeOut = 0;
-			tempState = true;
-		}*/
 
 		// update the position of each ball. during update, check whether each ball hit by walls.
 		for (i = 0; i < BALL_COUNT; i++) {
-			g_sphere[i].ballUpdate(timeDelta);
+			g_sphere[i].ballUpdate(Device,g_mWorld , timeDelta);
 
 			for (j = 0; j < BALL_COUNT; j++) { g_legowall[i].hitBy(g_sphere[j]); }
 		}
 		for (i = 0; i < HOLE_COUNT; i++) {
-			g_hole[i].ballUpdate(timeDelta);
+			g_hole[i].ballUpdate(Device,g_mWorld , timeDelta);
 
 		}
 
@@ -483,7 +483,6 @@ bool Display(float timeDelta)
 			
 		}
 
-		g_cue.draw(Device, g_mWorld);
 
 		// draw plane, walls, and spheres
 
@@ -498,8 +497,12 @@ bool Display(float timeDelta)
 		for (i = 0; i < HOLE_COUNT; i++) {
 			g_hole[i].draw(Device, g_mWorld);
 		}
+
 		g_target_blueball.draw(Device, g_mWorld);
+		g_cue.draw(Device, g_mWorld);
 		g_light.draw(Device);
+
+		//g_cue.rotate(Device, g_mWorld);
 
 		Device->EndScene();
 		Device->Present(0, 0, 0, 0);
@@ -543,17 +546,14 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case VK_TAB:
-			cout << "Camera View chagned" << endl;
 			//VK_TAB 함수 
 		
 			if (CameraViewChanged == false)
 			{
-				{
-					D3DXVECTOR3 white = g_sphere[15].getPosition();
-					D3DXVECTOR3 blue = g_target_blueball.getPosition();
-					D3DXVECTOR3 vec = blue - white;
+				{	white = g_sphere[15].getPosition();
+					blue = g_target_blueball.getPosition();
+					vec = (blue - white);
 					D3DXVECTOR3 high(0.0f, 2.0f, 0.0f);
-
 					D3DXVECTOR3 pos(white + high - vec);
 					D3DXVECTOR3 target(blue);
 					D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
@@ -605,37 +605,39 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		if (LOWORD(wParam) & MK_RBUTTON) {
 
-			//if (isReset) {
-			//	isReset = false;
-			//}
-			//else {
-			//	D3DXVECTOR3 vDist;
-			//	D3DXVECTOR3 vTrans;
-			//	D3DXMATRIX mTrans;
-			//	D3DXMATRIX mX;
-			//	D3DXMATRIX mY;
 
-			//	switch (move) {
+			//D3DXVECTOR3 vDist;
+			//D3DXVECTOR3 vTrans;
+			//D3DXMATRIX mTrans;
+			//D3DXMATRIX mX;
+			//D3DXMATRIX mY;
+
+			//switch (move) {
 			//	case WORLD_MOVE:
-			//		dx = (old_x - new_x) * 0.01f;
-			//		dy = (old_y - new_y) * 0.01f;
+			//		dx = (old_x - new_x) * 0.001f;
+			//		//dy = (old_y - new_y) * 0.01f;
 			//		D3DXMatrixRotationY(&mX, dx);
-			//		D3DXMatrixRotationX(&mY, dy);
-			//		g_mWorld = g_mWorld * mX * mY;
+			//		//D3DXMatrixRotationX(&mY, dy);
+			//		g_mWorld = g_mWorld * mX ;
 
 			//		break;
-			//	}
 			//}
+			
 
-			//old_x = new_x;
-			//old_y = new_y;
+
+
 			if (isWhiteBallInHole) {
 				dx = (old_x - new_x);// * 0.01f;
 				dy = (old_y - new_y);// * 0.01f;
 
 				
 				D3DXVECTOR3 coord3d = g_sphere[15].getCenter();
+
 				g_sphere[15].setPosition(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
+				
+				D3DXMATRIX ;
+				D3DXMATRIX ;
+
 
 				old_x = new_x;
 				old_y = new_y;
@@ -653,7 +655,19 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				dy = (old_y - new_y);// * 0.01f;
 
 				D3DXVECTOR3 coord3d = g_target_blueball.getCenter();
+				D3DXVECTOR3 whiteball = g_sphere[15].getCenter();
+
 				g_target_blueball.setCenter(coord3d.x + dx*(-0.007f), coord3d.y, coord3d.z + dy*0.007f);
+
+				double cue_x = whiteball.x;
+				double cue_z = whiteball.z;
+
+				//D3DXVECTOR3 cue(cue_x, (float)M_RADIUS * 4, cue_z);
+				
+
+				//g_cue.setPosition(cue.x, cue.y, cue.z);
+
+				
 			}
 			old_x = new_x;
 			old_y = new_y;

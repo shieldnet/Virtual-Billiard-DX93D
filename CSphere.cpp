@@ -17,6 +17,10 @@ CSphere::CSphere(void)
 	m_velocity_x = 0;	// 공 x 속도
 	m_velocity_z = 0;	// 공 z 속도
 	m_pSphereMesh = NULL;	// ??
+
+
+	D3DXMatrixIdentity(&mLocal);
+	D3DXMatrixIdentity(&this->matBallRoll);
 }
 
 CSphere::~CSphere(void) {
@@ -71,7 +75,6 @@ bool CSphere::create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE) //
 	m_mtrl.Specular = color;
 	m_mtrl.Emissive = d3d::BLACK;
 	m_mtrl.Power = 5.0f;
-
 	if (FAILED(D3DXCreateSphere(pDevice, getRadius(), 50, 50, &m_pSphereMesh, NULL)))
 		return false;
 	return true;
@@ -129,12 +132,14 @@ LPD3DXMESH CSphere::_createMappedSphere(IDirect3DDevice9* pDev)
 
 void CSphere::draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
 {
+	
 	if (NULL == pDevice)
 		return;
 	pDevice->SetTransform(D3DTS_WORLD, &mWorld);
 	pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
-	pDevice->SetMaterial(&m_mtrl);
+	pDevice->MultiplyTransform(D3DTS_WORLD, &matBallRoll);
 	pDevice->SetTexture(0, Texture);
+	pDevice->SetMaterial(&m_mtrl);
 	m_pSphereMesh->DrawSubset(0);
 }
 
@@ -194,8 +199,9 @@ void CSphere::hitBy(CSphere& ball) noexcept	// 공 충돌 시 처리
 }
 
 
-void CSphere::ballUpdate(float timeDiff)
+void CSphere::ballUpdate(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld, float timeDiff)
 	{
+	
 		const float TIME_SCALE = 3.3F;
 		D3DXVECTOR3 cord = this->getPosition();
 		double vx = abs(this->getVelocity_X());
@@ -212,13 +218,12 @@ void CSphere::ballUpdate(float timeDiff)
 			float tZ = cord.z + TIME_SCALE * timeDiff * m_velocity_z;
 
 			this->setPosition(tX, cord.y, tZ);
-
+			float force = sqrt(pow(this->m_velocity_x, 2) + pow(this->m_velocity_z, 2));
 			D3DXMATRIX tmp;
 			D3DXVECTOR3 c(this->m_velocity_z, 0, -this->m_velocity_x);
-
-			float force = sqrt(pow(this->m_velocity_x, 2) + pow(this->m_velocity_z, 2));
 			D3DXMatrixRotationAxis(&tmp, &c, force * SPIN_RATIO);
 			matBallRoll *= tmp;
+
 		}
 		else
 		{
@@ -229,7 +234,10 @@ void CSphere::ballUpdate(float timeDiff)
 		double rate = 1 - (1 - DECREASE_RATE) * timeDiff * 400;
 		if (rate < 0) rate = 0;
 
+		
 		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);// 공이 움직일 때마다, 속도를 낮춤
+		
+	
 	}
 
 double CSphere::getVelocity_X() { return this->m_velocity_x; }
